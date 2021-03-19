@@ -1,6 +1,0 @@
-projectKey=league-of-items
-serverUrl=http://localhost:9000
-serverVersion=8.7.1.42226
-dashboardUrl=http://localhost:9000/dashboard?id=league-of-items
-ceTaskId=AXg7yEGOz0QVpKY5xsjV
-ceTaskUrl=http://localhost:9000/api/ce/task?id=AXg7yEGOz0QVpKY5xsjV
