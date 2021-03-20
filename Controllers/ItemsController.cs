@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using LeagueOfItems.Models;
+using LeagueOfItems.Models.Filters;
 using LeagueOfItems.Services;
-using LeagueOfItems.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -22,14 +22,14 @@ namespace LeagueOfItems.Controllers
         }
 
         [HttpGet]
-        public async Task<List<ItemViewModel>> Get([FromQuery] ItemFilter filter)
+        public async Task<List<ItemStats>> Get([FromQuery] ItemFilter filter)
         {
             return await _service.GetAllItems(filter);
         }
         
         [HttpGet]
         [Route("{id}")]
-        public async Task<ItemViewModel> Get([FromRoute] int id, [FromQuery] ItemFilter filter)
+        public async Task<ItemStats> Get([FromRoute] int id, [FromQuery] ItemFilter filter)
         {
             return await _service.GetItemStats(id, filter);
         }

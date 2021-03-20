@@ -7,7 +7,7 @@ namespace LeagueOfItems.Models.Riot {
         public string Type { get; set; }
         public string Version { get; set; }
         public Basic Basic { get; set; }
-        public Dictionary<int, Item> Data { get; set; }
+        public Dictionary<int, RiotItem> Data { get; set; }
         public List<Group> Groups { get; set; }
         public List<Tree> Tree { get; set; }
     }

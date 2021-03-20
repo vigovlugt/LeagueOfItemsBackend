@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using LeagueOfItems.Models;
 using LeagueOfItems.Services;
@@ -20,14 +21,20 @@ namespace LeagueOfItems.Controllers
             _context = context;
             _riotService = riotService;
         }
-        
+
         [HttpGet]
         public async Task Get()
         {
-            var items = await _riotService.GetItems();
+            var riotItems = await _riotService.GetItems();
+
+            var items = riotItems.Select(Item.FromRiotItem).ToList();
+
             await _riotService.SaveItems(items);
-            
-            var champions = await _riotService.GetChampions();
+
+            var riotChampions = await _riotService.GetChampions();
+
+            var champions = riotChampions.Select(Champion.FromRiotChampion).ToList();
+
             await _riotService.SaveChampions(champions);
         }
     }

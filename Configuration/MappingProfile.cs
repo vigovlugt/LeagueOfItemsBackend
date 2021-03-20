@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using LeagueOfItems.Models;
-using LeagueOfItems.ViewModels;
 
 namespace LeagueOfItems.Configuration
 {
@@ -8,7 +6,6 @@ namespace LeagueOfItems.Configuration
     {
         public MappingProfile()
         {
-            CreateMap<Item, ItemViewModel>();
         }
     }
 }

@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using LeagueOfItems.Models;
+using LeagueOfItems.Models.Filters;
 using LeagueOfItems.Models.Ugg;
-using LeagueOfItems.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -12,8 +13,8 @@ namespace LeagueOfItems.Services
 {
     public interface IItemService
     {
-        Task<List<ItemViewModel>> GetAllItems(ItemFilter filter);
-        Task<ItemViewModel> GetItemStats(int id, ItemFilter filter);
+        Task<List<ItemStats>> GetAllItems(ItemFilter filter);
+        Task<ItemStats> GetItemStats(int id, ItemFilter filter);
     }
 
     public class ItemService : IItemService
@@ -29,7 +30,7 @@ namespace LeagueOfItems.Services
             _mapper = mapper;
         }
 
-        public async Task<List<ItemViewModel>> GetAllItems(ItemFilter filter)
+        public async Task<List<ItemStats>> GetAllItems(ItemFilter filter)
         {
             var items = await _context.Items
                 .Include(i => i.ItemData.Where(d =>
@@ -39,18 +40,12 @@ namespace LeagueOfItems.Services
                 .OrderBy(i => i.Name)
                 .ToListAsync();
 
-            var itemVms = _mapper.Map<List<ItemViewModel>>(items);
-            foreach (var itemVm in itemVms)
-            {
-                itemVm.Wins = itemVm.ItemData.Select(d => d.Wins).Aggregate(0, (a, b) => a + b);
-                itemVm.Matches = itemVm.ItemData.Select(d => d.Matches).Aggregate(0, (a, b) => a + b);
-                itemVm.ItemData = null;
-            }
+            var itemStats = items.Select(i => new ItemStats(i)).ToList();
 
-            return itemVms;
+            return itemStats;
         }
-        
-        public async Task<ItemViewModel> GetItemStats(int id, ItemFilter filter)
+
+        public async Task<ItemStats> GetItemStats(int id, ItemFilter filter)
         {
             var item = await _context.Items
                 .Include(i => i.ItemData.Where(d =>
@@ -58,15 +53,8 @@ namespace LeagueOfItems.Services
                     (d.Role == filter.Role || filter.Role == UggRole.None)))
                 .Where(i => i.ItemData.Count != 0)
                 .SingleAsync(i => i.Id == id);
-            
-            var itemVm = _mapper.Map<ItemViewModel>(item);
-            
-            itemVm.ItemData.ForEach(d =>
-            {
-                d.Item = null;
-            });
 
-            return itemVm;
+            return new ItemStats(item);
         }
     }
 }

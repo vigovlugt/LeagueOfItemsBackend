@@ -1,3 +1,4 @@
+using LeagueOfItems.Models.Ugg;
 using Microsoft.EntityFrameworkCore;
 
 namespace LeagueOfItems.Models
@@ -16,10 +17,10 @@ namespace LeagueOfItems.Models
         public DbSet<Item> Items { get; set; }
         public DbSet<Champion> Champions { get; set; }
         
-        public DbSet<ItemData> ItemData { get; set; }
+        public DbSet<UggItemData> ItemData { get; set; }
         
-        public DbSet<StarterSetData> StarterSetData { get; set; }
-        public DbSet<StarterSetItem> StarterSetItems { get; set; }
+        public DbSet<UggStarterSetData> StarterSetData { get; set; }
+        public DbSet<UggStarterSetItem> StarterSetItems { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,15 +28,15 @@ namespace LeagueOfItems.Models
                 .HasMany(i => i.ItemData)
                 .WithOne(d => d.Item);
             
-            modelBuilder.Entity<ItemData>()
+            modelBuilder.Entity<UggItemData>()
                 .HasKey(i => new {i.ItemId, i.ChampionId, i.Rank, i.Order, i.Region, i.Role} );
             
-            modelBuilder.Entity<StarterSetData>()
+            modelBuilder.Entity<UggStarterSetData>()
                 .HasMany(p => p.Items)
-                .WithOne(b => b.StarterSet)
+                .WithOne(b => b.UggStarterSet)
                 .IsRequired();
 
-            modelBuilder.Entity<StarterSetItem>()
+            modelBuilder.Entity<UggStarterSetItem>()
                 .HasKey(i => new {i.StarterSetId, i.ItemId});
         }
     }
