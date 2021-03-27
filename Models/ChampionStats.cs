@@ -1,4 +1,8 @@
-﻿namespace LeagueOfItems.Models
+﻿using System.Collections.Generic;
+using System.Linq;
+using LeagueOfItems.Models.Ugg;
+
+namespace LeagueOfItems.Models
 {
     public class ChampionStats
     {
@@ -6,5 +10,15 @@
 
         public int Wins { get; set; }
         public int Matches { get; set; }
+
+        public static ChampionStats FromItemStats(int championId, List<UggItemData> itemData)
+        {
+            return new()
+            {
+                ChampionId = championId,
+                Wins = itemData.Select(d => d.Wins).Aggregate(0, (a, b) => a + b),
+                Matches = itemData.Select(d => d.Matches).Aggregate(0, (a, b) => a + b)
+            };
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -41,7 +42,7 @@ namespace LeagueOfItems.Services
             var starterSetData = new List<UggStarterSetData>();
             var itemData = new List<UggItemData>();
 
-            foreach (var champion in champions)
+            await Task.WhenAll(champions.Select(async champion =>
             {
                 _logger.LogInformation("Downloading data for {Champion}", champion.Name);
 
@@ -49,9 +50,9 @@ namespace LeagueOfItems.Services
 
                 starterSetData.AddRange(FilterItemData(newStarterSetData));
                 itemData.AddRange(FilterItemData(newItemData));
-            }
+            }));
 
-            await SaveStarterSetData(starterSetData);
+            // await SaveStarterSetData(starterSetData);
             await SaveItemData(itemData);
         }
 
@@ -115,9 +116,18 @@ namespace LeagueOfItems.Services
                             Role = role
                         }));
 
-                        for (var order = 0; order < uggItemDataByOrder.Count; order++)
+                        for (var i = 0; i < uggItemDataByOrder.Count; i++)
                         {
-                            var uggItemData = uggItemDataByOrder[order];
+                            if (i == 1)
+                            {
+                                // TODO handle boots
+                                continue;
+                            }
+                            
+                            var uggItemData = uggItemDataByOrder[i];
+
+                            var order = i == 0 ? i : i - 1;
+
                             itemDataList.AddRange(uggItemData.Select(uggItem => new UggItemData
                             {
                                 ChampionId = championId,
@@ -139,8 +149,9 @@ namespace LeagueOfItems.Services
 
         // First list for starting 1,2,3,4,5th item
         // Second list for items in that category.
-        private static (List<Models.Ugg.UggSimpleStarterSetData>, List<List<Models.Ugg.UggSimpleItemData>>) ParseItemData(
-            List<List<JsonElement>> itemData)
+        private static (List<Models.Ugg.UggSimpleStarterSetData>, List<List<Models.Ugg.UggSimpleItemData>>)
+            ParseItemData(
+                List<List<JsonElement>> itemData)
         {
             var starterItemData = itemData[0];
 
