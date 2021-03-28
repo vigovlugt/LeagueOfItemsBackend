@@ -41,19 +41,23 @@ namespace LeagueOfItems.Services
 
             var starterSetData = new List<UggStarterSetData>();
             var itemData = new List<UggItemData>();
+            var runeData = new List<UggRuneData>();
 
             await Task.WhenAll(champions.Select(async champion =>
             {
                 _logger.LogInformation("Downloading data for {Champion}", champion.Name);
 
                 var (newStarterSetData, newItemData) = await GetUggItemData(champion.Id);
+                var newRuneData = await GetUggRuneData(champion.Id);
 
                 starterSetData.AddRange(FilterItemData(newStarterSetData));
                 itemData.AddRange(FilterItemData(newItemData));
+                runeData.AddRange(FilterItemData(newRuneData));
             }));
 
             // await SaveStarterSetData(starterSetData);
             await SaveItemData(itemData);
+            await SaveRuneData(runeData);
         }
 
         private async Task<(List<UggStarterSetData>, List<UggItemData>)> GetUggItemData(int championId)
@@ -123,7 +127,7 @@ namespace LeagueOfItems.Services
                                 // TODO handle boots
                                 continue;
                             }
-                            
+
                             var uggItemData = uggItemDataByOrder[i];
 
                             var order = i == 0 ? i : i - 1;
@@ -149,7 +153,7 @@ namespace LeagueOfItems.Services
 
         // First list for starting 1,2,3,4,5th item
         // Second list for items in that category.
-        private static (List<Models.Ugg.UggSimpleStarterSetData>, List<List<Models.Ugg.UggSimpleItemData>>)
+        private static (List<UggSimpleStarterSetData>, List<List<UggSimpleItemData>>)
             ParseItemData(
                 List<List<JsonElement>> itemData)
         {
@@ -157,7 +161,7 @@ namespace LeagueOfItems.Services
 
             var itemDataByOrder = itemData.Skip(1).ToList();
 
-            var newStarterItemData = starterItemData.Select(startSetInfo => new Models.Ugg.UggSimpleStarterSetData
+            var newStarterItemData = starterItemData.Select(startSetInfo => new UggSimpleStarterSetData
             {
                 ItemIds = startSetInfo[0].EnumerateArray().Select(el => el.GetInt32()).ToList(),
                 Wins = startSetInfo[1].GetInt32(),
@@ -165,7 +169,7 @@ namespace LeagueOfItems.Services
             }).ToList();
 
             var newItemDataByOrder = itemDataByOrder.Select(itemsByOrder => itemsByOrder.Select(itemInfo =>
-                new Models.Ugg.UggSimpleItemData
+                new UggSimpleItemData
                 {
                     ItemId = itemInfo[0].GetInt32(),
                     Wins = itemInfo[1].GetInt32(),
@@ -175,10 +179,10 @@ namespace LeagueOfItems.Services
             return (newStarterItemData, newItemDataByOrder);
         }
 
-        private static List<T> FilterItemData<T>(List<T> data) where T : IUggItemData
+        private static List<T> FilterItemData<T>(List<T> data) where T : IUggData
         {
-            var regions = new List<UggRegion> {UggRegion.Euw1, UggRegion.Na1, UggRegion.Kr, UggRegion.World};
-            var ranks = new List<UggRank> {UggRank.Challenger, UggRank.PlatinumPlus, UggRank.Overall};
+            var regions = new List<UggRegion> {UggRegion.World}; //UggRegion.Euw1, UggRegion.Na1, UggRegion.Kr, 
+            var ranks = new List<UggRank> {UggRank.PlatinumPlus}; // UggRank.Challenger, UggRank.Overall
 
             return data.Where(itemData => regions.Contains(itemData.Region) && ranks.Contains(itemData.Rank)).ToList();
         }
@@ -207,6 +211,105 @@ namespace LeagueOfItems.Services
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{StarterSetDataAmount} StarterSets rows saved", starterSetData.Count);
+        }
+
+        private async Task<List<UggRuneData>> GetUggRuneData(int championId)
+        {
+            var version = await _riotDataService.GetCurrentVersion();
+
+            var uggVersion = string.Join('_', version.Split(".").Take(2));
+
+            var response = await _client.GetAsync(_baseUrl +
+                                                  $"lol/1.1/table/runes/{uggVersion}/ranked_solo_5x5/{championId}/1.4.0.json");
+            response.EnsureSuccessStatusCode();
+
+            await using var responseStream = await response.Content.ReadAsStreamAsync();
+
+            var runeData =
+                await JsonSerializer
+                    .DeserializeAsync<Dictionary<int, Dictionary<int, Dictionary<int, List<Dictionary<int, List<int>>>>>
+                    >>(
+                        responseStream);
+
+            var parsedRuneData = ParseUggRuneData(championId, runeData);
+
+            return parsedRuneData;
+        }
+
+        private static List<UggRuneData> ParseUggRuneData(
+            int championId,
+            Dictionary<int, Dictionary<int, Dictionary<int, List<Dictionary<int, List<int>>>>>> data)
+        {
+            var runeDataList = new List<UggRuneData>();
+
+            foreach (var (regionIndex, rankRoleData) in data)
+            {
+                var region = (UggRegion) regionIndex;
+
+                foreach (var (rankIndex, roleData) in rankRoleData)
+                {
+                    var rank = (UggRank) rankIndex;
+
+                    foreach (var (roleIndex, itemData) in roleData)
+                    {
+                        var role = (UggRole) roleIndex;
+
+                        var simpleRuneData = ParseRuneData(itemData);
+
+                        runeDataList.AddRange(simpleRuneData.Select(uggSimpleRune => new UggRuneData
+                        {
+                            ChampionId = championId,
+                            Rank = rank,
+                            Role = role,
+                            Region = region,
+                            RuneId = uggSimpleRune.RuneId,
+                            Matches = uggSimpleRune.Matches,
+                            Wins = uggSimpleRune.Wins,
+                            Tier = uggSimpleRune.Tier
+                        }));
+                    }
+                }
+            }
+
+            return runeDataList;
+        }
+
+        private static List<UggSimpleRuneData>
+            ParseRuneData(
+                List<Dictionary<int, List<int>>> runeData)
+        {
+            var runeDataList = new List<UggSimpleRuneData>();
+
+            var keyStoneData = runeData[0];
+            var primaryRuneData = runeData[1];
+            var secondaryRuneData = runeData[2];
+
+            runeDataList.AddRange(keyStoneData
+                .ToList()
+                .Select(pair => new UggSimpleRuneData(pair.Key, 0, pair.Value[0], pair.Value[1])));
+
+            runeDataList.AddRange(primaryRuneData
+                .ToList()
+                .Select(pair => new UggSimpleRuneData(pair.Key, 0, pair.Value[0], pair.Value[1])));
+
+            runeDataList.AddRange(secondaryRuneData
+                .ToList()
+                .Select(pair => new UggSimpleRuneData(pair.Key, 1, pair.Value[0], pair.Value[1])));
+
+            return runeDataList;
+        }
+
+        private async Task SaveRuneData(List<UggRuneData> runeData)
+        {
+            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM RuneData;");
+
+            _logger.LogInformation("{RuneDataAmount} RuneData rows deleted", deleted);
+
+            _context.RuneData.AddRange(runeData);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("{RuneDataAmount} RuneData rows saved", runeData.Count);
         }
     }
 }

@@ -16,6 +16,9 @@ namespace LeagueOfItems.Services
         Task SaveItems(List<Item> items);
         Task<List<RiotChampion>> GetChampions();
         Task SaveChampions(List<Champion> champions);
+        
+        Task<List<RiotRunePath>> GetRunes();
+        Task SaveRunes(List<RunePath> runePaths);
         Task<string> GetCurrentVersion();
     }
 
@@ -26,7 +29,7 @@ namespace LeagueOfItems.Services
 
         private readonly string _baseUrl = "https://ddragon.leagueoflegends.com/";
         private readonly HttpClient _client;
-        
+
         private string _version = null;
 
         public RiotDataService(ILogger<RiotDataService> logger, IHttpClientFactory clientFactory, ItemContext context)
@@ -43,7 +46,7 @@ namespace LeagueOfItems.Services
             {
                 return _version;
             }
-            
+
             var response = await _client.GetAsync(_baseUrl + "api/versions.json");
             response.EnsureSuccessStatusCode();
 
@@ -127,6 +130,36 @@ namespace LeagueOfItems.Services
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{ChampionAmount} champions saved", champions.Count);
+        }
+
+        public async Task<List<RiotRunePath>> GetRunes()
+        {
+            var version = await GetCurrentVersion();
+            var response = await _client.GetAsync(_baseUrl + $"cdn/{version}/data/en_US/runesReforged.json");
+            response.EnsureSuccessStatusCode();
+
+            await using var responseStream = await response.Content.ReadAsStreamAsync();
+
+            var runeResponse = await JsonSerializer.DeserializeAsync<List<RiotRunePath>>(responseStream,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            return runeResponse;
+        }
+
+        public async Task SaveRunes(List<RunePath> runePaths)
+        {
+            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM RunePaths;");
+
+            _logger.LogInformation("{RunePathAmount} rune paths deleted", deleted);
+
+            _context.RunePaths.AddRange(runePaths);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("{RunePathAmount} rune paths saved", runePaths.Count);
         }
     }
 }

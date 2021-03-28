@@ -28,6 +28,7 @@ namespace LeagueOfItems
             services.AddScoped<IRiotDataService, RiotDataService>();
             services.AddScoped<IUggDataService, UggDataService>();
             services.AddScoped<IItemService, ItemService>();
+            services.AddScoped<IRuneService, RuneService>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

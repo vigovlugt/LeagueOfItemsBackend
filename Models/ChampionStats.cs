@@ -20,5 +20,15 @@ namespace LeagueOfItems.Models
                 Matches = itemData.Select(d => d.Matches).Aggregate(0, (a, b) => a + b)
             };
         }
+        
+        public static ChampionStats FromRuneStats(int championId, List<UggRuneData> runeData)
+        {
+            return new()
+            {
+                ChampionId = championId,
+                Wins = runeData.Select(d => d.Wins).Aggregate(0, (a, b) => a + b),
+                Matches = runeData.Select(d => d.Matches).Aggregate(0, (a, b) => a + b)
+            };
+        }
     }
 }

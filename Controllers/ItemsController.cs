@@ -34,6 +34,4 @@ namespace LeagueOfItems.Controllers
             return await _service.GetItemStats(id, filter);
         }
     }
-    
-    
 }

@@ -2,7 +2,7 @@
 
 namespace LeagueOfItems.Models.Ugg
 {
-    public class UggItemData : IUggItemData
+    public class UggItemData : IUggData
     {
         public int ItemId { get; set; }
         public Item Item { get; set; }

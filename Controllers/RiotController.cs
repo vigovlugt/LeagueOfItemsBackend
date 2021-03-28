@@ -36,6 +36,12 @@ namespace LeagueOfItems.Controllers
             var champions = riotChampions.Select(Champion.FromRiotChampion).ToList();
 
             await _riotService.SaveChampions(champions);
+
+            var runes = await _riotService.GetRunes();
+
+            var runePaths = runes.Select(RunePath.FromRiotRunePath).ToList();
+
+            await _riotService.SaveRunes(runePaths);
         }
     }
 }
