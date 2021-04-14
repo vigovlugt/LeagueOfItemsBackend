@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -59,19 +60,42 @@ namespace LeagueOfItems.Services
             await SaveItemData(itemData);
             await SaveRuneData(runeData);
         }
+        
+        private async Task<Stream> GetUggDataStream(int championId, string type)
+        {
+            var versions = await _riotDataService.GetVersions();
+
+            for (var i = 0; i < 2; i++)
+            {
+                var version = versions[i];
+                var uggVersion = string.Join('_', version.Split(".").Take(2));
+
+                var response =
+                    await _client.GetAsync(_baseUrl +
+                                           $"lol/1.1/table/{type}/{uggVersion}/ranked_solo_5x5/{championId}/1.4.0.json");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsStreamAsync();
+                }
+                
+                _logger.LogWarning("Version {Version} does not have UGG data", version);
+            }
+
+            _logger.LogWarning("No UGG datastream found {ChampionId}", championId);
+            
+            return null;
+        }
 
         private async Task<(List<UggStarterSetData>, List<UggItemData>)> GetUggItemData(int championId)
         {
-            var version = await _riotDataService.GetCurrentVersion();
+            await using var responseStream = await GetUggDataStream(championId, "items");
 
-            var uggVersion = string.Join('_', version.Split(".").Take(2));
-
-            var response =
-                await _client.GetAsync(_baseUrl +
-                                       $"lol/1.1/table/items/{uggVersion}/ranked_solo_5x5/{championId}/1.4.0.json");
-            response.EnsureSuccessStatusCode();
-
-            await using var responseStream = await response.Content.ReadAsStreamAsync();
+            if (responseStream == null)
+            {
+                _logger.LogWarning("Could not get UggItemData for ChampionId {ChampionId}", championId);
+                return (new List<UggStarterSetData>(), new List<UggItemData>());
+            }
 
             var itemData =
                 await JsonSerializer
@@ -215,15 +239,13 @@ namespace LeagueOfItems.Services
 
         private async Task<List<UggRuneData>> GetUggRuneData(int championId)
         {
-            var version = await _riotDataService.GetCurrentVersion();
-
-            var uggVersion = string.Join('_', version.Split(".").Take(2));
-
-            var response = await _client.GetAsync(_baseUrl +
-                                                  $"lol/1.1/table/runes/{uggVersion}/ranked_solo_5x5/{championId}/1.4.0.json");
-            response.EnsureSuccessStatusCode();
-
-            await using var responseStream = await response.Content.ReadAsStreamAsync();
+            await using var responseStream = await GetUggDataStream(championId, "runes");
+            
+            if (responseStream == null)
+            {
+                _logger.LogWarning("Could not get UggRuneData for ChampionId {ChampionId}", championId);
+                return new List<UggRuneData>();
+            }
 
             var runeData =
                 await JsonSerializer

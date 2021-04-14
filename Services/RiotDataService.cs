@@ -20,6 +20,7 @@ namespace LeagueOfItems.Services
         Task<List<RiotRunePath>> GetRunes();
         Task SaveRunes(List<RunePath> runePaths);
         Task<string> GetCurrentVersion();
+        Task<List<string>> GetVersions();
     }
 
     public class RiotDataService : IRiotDataService
@@ -30,7 +31,7 @@ namespace LeagueOfItems.Services
         private readonly string _baseUrl = "https://ddragon.leagueoflegends.com/";
         private readonly HttpClient _client;
 
-        private string _version = null;
+        private string _version;
 
         public RiotDataService(ILogger<RiotDataService> logger, IHttpClientFactory clientFactory, ItemContext context)
         {
@@ -58,6 +59,18 @@ namespace LeagueOfItems.Services
             _logger.LogInformation("Current version {Version}", _version);
 
             return _version;
+        }
+
+        public async Task<List<string>> GetVersions()
+        {
+            var response = await _client.GetAsync(_baseUrl + "api/versions.json");
+            response.EnsureSuccessStatusCode();
+
+            await using var responseStream = await response.Content.ReadAsStreamAsync();
+
+            var versions = await JsonSerializer.DeserializeAsync<List<string>>(responseStream);
+
+            return versions;
         }
 
         public async Task<List<RiotItem>> GetItems()

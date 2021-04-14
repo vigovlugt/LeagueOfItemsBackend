@@ -6,6 +6,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using LeagueOfItems.Models;
 using LeagueOfItems.Services;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace LeagueOfItems
 {
@@ -14,6 +16,12 @@ namespace LeagueOfItems
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .Enrich.FromLogContext()
+                .WriteTo.Seq("http://localhost:5341")
+                .CreateLogger();
         }
 
         public IConfiguration Configuration { get; }
@@ -29,6 +37,7 @@ namespace LeagueOfItems
             services.AddScoped<IUggDataService, UggDataService>();
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IRuneService, RuneService>();
+            services.AddScoped<IExportService, ExportService>();
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -38,7 +47,7 @@ namespace LeagueOfItems
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -46,6 +55,8 @@ namespace LeagueOfItems
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "LeagueOfItems v1"));
             }
+
+            loggerFactory.AddSerilog();
 
             // app.UseHttpsRedirection();
 
