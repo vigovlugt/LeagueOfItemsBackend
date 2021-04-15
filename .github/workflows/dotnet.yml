@@ -19,3 +19,11 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
+    - name: Riot
+      run: ls
+    - name: U.GG
+      run: ls
+    - name: Github
+      run: ls
+      env:
+          "Github:Token": ${{ secrets.Token }}
