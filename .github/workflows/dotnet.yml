@@ -21,8 +21,12 @@ jobs:
       run: dotnet build --no-restore
     - name: Riot
       run: dotnet bin/Debug/net5.0/LeagueOfItems.dll riot
+      env:
+        "Github:Token": ${{ secrets.Token }}
     - name: U.GG
       run: dotnet bin/Debug/net5.0/LeagueOfItems.dll ugg
+      env:
+        "Github:Token": ${{ secrets.Token }}
     - name: Github
       run: dotnet bin/Debug/net5.0/LeagueOfItems.dll github
       env:
