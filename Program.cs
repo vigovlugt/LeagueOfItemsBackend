@@ -27,6 +27,7 @@ namespace LeagueOfItems
                 .ConfigureAppConfiguration(config =>
                     config
                         .AddUserSecrets<Program>()
+                        .AddEnvironmentVariables()
                         .AddJsonFile("appsettings.json")
                         .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
                             true))
