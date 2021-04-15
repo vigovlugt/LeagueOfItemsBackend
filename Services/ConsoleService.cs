@@ -58,6 +58,14 @@ namespace LeagueOfItems.Services
                     case "github":
                         await _githubService.StoreDataset();
                         break;
+                    case "empty-db":
+                        await _riotDataService.DeleteChampions();
+                        await _riotDataService.DeleteRunes();
+                        await _riotDataService.DeleteItems();
+
+                        await _uggDataService.DeleteItemData();
+                        await _uggDataService.DeleteRuneData();
+                        break;
                 }
 
                 _appLifetime.StopApplication();

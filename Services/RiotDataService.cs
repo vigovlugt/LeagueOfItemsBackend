@@ -14,13 +14,18 @@ namespace LeagueOfItems.Services
     {
         Task<List<RiotItem>> GetItems();
         Task SaveItems(List<Item> items);
+        Task DeleteItems();
+        
         Task<List<RiotChampion>> GetChampions();
         Task SaveChampions(List<Champion> champions);
+        Task DeleteChampions();
 
         Task SaveAll();
-        
+
         Task<List<RiotRunePath>> GetRunes();
         Task SaveRunes(List<RunePath> runePaths);
+        Task DeleteRunes();
+
         Task<string> GetCurrentVersion();
         Task<List<string>> GetVersions();
     }
@@ -123,11 +128,16 @@ namespace LeagueOfItems.Services
             return items;
         }
 
-        public async Task SaveItems(List<Item> items)
+        public async Task DeleteItems()
         {
             var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM Items;");
 
             _logger.LogInformation("{ItemAmount} items deleted", deleted);
+        }
+
+        public async Task SaveItems(List<Item> items)
+        {
+            await DeleteItems();
 
             _context.Items.AddRange(items);
 
@@ -155,11 +165,16 @@ namespace LeagueOfItems.Services
             return championResponse.Data.Values.ToList();
         }
 
-        public async Task SaveChampions(List<Champion> champions)
+        public async Task DeleteChampions()
         {
             var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM Champions;");
 
             _logger.LogInformation("{ChampionAmount} champions deleted", deleted);
+        }
+
+        public async Task SaveChampions(List<Champion> champions)
+        {
+            await DeleteChampions();
 
             _context.Champions.AddRange(champions);
 
@@ -185,11 +200,16 @@ namespace LeagueOfItems.Services
             return runeResponse;
         }
 
-        public async Task SaveRunes(List<RunePath> runePaths)
+        public async Task DeleteRunes()
         {
             var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM RunePaths;");
 
             _logger.LogInformation("{RunePathAmount} rune paths deleted", deleted);
+        }
+
+        public async Task SaveRunes(List<RunePath> runePaths)
+        {
+            await DeleteRunes();
 
             _context.RunePaths.AddRange(runePaths);
 

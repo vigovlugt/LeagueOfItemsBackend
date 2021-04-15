@@ -14,7 +14,10 @@ namespace LeagueOfItems.Services
 {
     public interface IUggDataService
     {
-        public Task SaveForAllChampions();
+        Task SaveForAllChampions();
+
+        Task DeleteRuneData();
+        Task DeleteItemData();
     }
 
     public class UggDataService : IUggDataService
@@ -60,7 +63,7 @@ namespace LeagueOfItems.Services
             await SaveItemData(itemData);
             await SaveRuneData(runeData);
         }
-        
+
         private async Task<Stream> GetUggDataStream(int championId, string type)
         {
             var versions = await _riotDataService.GetVersions();
@@ -78,12 +81,12 @@ namespace LeagueOfItems.Services
                 {
                     return await response.Content.ReadAsStreamAsync();
                 }
-                
+
                 _logger.LogWarning("Version {Version} does not have UGG data", version);
             }
 
             _logger.LogWarning("No UGG datastream found {ChampionId}", championId);
-            
+
             return null;
         }
 
@@ -211,11 +214,16 @@ namespace LeagueOfItems.Services
             return data.Where(itemData => regions.Contains(itemData.Region) && ranks.Contains(itemData.Rank)).ToList();
         }
 
-        private async Task SaveItemData(List<UggItemData> itemData)
+        public async Task DeleteItemData()
         {
             var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM ItemData;");
 
             _logger.LogInformation("{ItemDataAmount} ItemData rows deleted", deleted);
+        }
+
+        private async Task SaveItemData(List<UggItemData> itemData)
+        {
+            await DeleteItemData();
 
             _context.ItemData.AddRange(itemData);
 
@@ -240,7 +248,7 @@ namespace LeagueOfItems.Services
         private async Task<List<UggRuneData>> GetUggRuneData(int championId)
         {
             await using var responseStream = await GetUggDataStream(championId, "runes");
-            
+
             if (responseStream == null)
             {
                 _logger.LogWarning("Could not get UggRuneData for ChampionId {ChampionId}", championId);
@@ -321,11 +329,16 @@ namespace LeagueOfItems.Services
             return runeDataList;
         }
 
-        private async Task SaveRuneData(List<UggRuneData> runeData)
+        public async Task DeleteRuneData()
         {
             var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM RuneData;");
 
             _logger.LogInformation("{RuneDataAmount} RuneData rows deleted", deleted);
+        }
+
+        private async Task SaveRuneData(List<UggRuneData> runeData)
+        {
+            await DeleteRuneData();
 
             _context.RuneData.AddRange(runeData);
 

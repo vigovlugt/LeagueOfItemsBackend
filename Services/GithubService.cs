@@ -19,7 +19,7 @@ namespace LeagueOfItems.Services
         private GitHubClient _client;
         private readonly IRuneService _runeService;
         private readonly IItemService _itemService;
-        private readonly ILogger _logger;
+        private readonly ILogger<GithubService> _logger;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
 
         private string _repository;
@@ -27,7 +27,7 @@ namespace LeagueOfItems.Services
         private string _path;
 
         public GithubService(IConfiguration configuration, IRuneService runeService, IItemService itemService,
-            ILogger logger)
+            ILogger<GithubService> logger)
         {
             _runeService = runeService;
             _itemService = itemService;
