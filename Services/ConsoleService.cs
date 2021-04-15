@@ -41,6 +41,7 @@ namespace LeagueOfItems.Services
                 if (args.Length <= 1)
                 {
                     _logger.LogCritical("Usage: dotnet run ugg/riot/export");
+                    _appLifetime.StopApplication();
                     return;
                 }
 
