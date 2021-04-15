@@ -16,6 +16,8 @@ namespace LeagueOfItems.Services
         Task SaveItems(List<Item> items);
         Task<List<RiotChampion>> GetChampions();
         Task SaveChampions(List<Champion> champions);
+
+        Task SaveAll();
         
         Task<List<RiotRunePath>> GetRunes();
         Task SaveRunes(List<RunePath> runePaths);
@@ -39,6 +41,27 @@ namespace LeagueOfItems.Services
             _context = context;
 
             _client = clientFactory.CreateClient();
+        }
+
+        public async Task SaveAll()
+        {
+            var riotItems = await GetItems();
+
+            var items = riotItems.Select(Item.FromRiotItem).ToList();
+
+            await SaveItems(items);
+
+            var riotChampions = await GetChampions();
+
+            var champions = riotChampions.Select(Champion.FromRiotChampion).ToList();
+
+            await SaveChampions(champions);
+
+            var runes = await GetRunes();
+
+            var runePaths = runes.Select(RunePath.FromRiotRunePath).ToList();
+
+            await SaveRunes(runePaths);
         }
 
         public async Task<string> GetCurrentVersion()

@@ -2,59 +2,54 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using LeagueOfItems.Models;
 using LeagueOfItems.Models.Filters;
+using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Services
 {
     public interface IExportService
     {
         Task ExportAll();
-        Task ExportItems();
-        Task ExportRunes();
     }
 
     public class ExportService : IExportService
     {
         private readonly IRuneService _runeService;
         private readonly IItemService _itemService;
-        
-        public ExportService(IRuneService runeService, IItemService itemService)
+        private readonly ILogger<ExportService> _logger;
+        private readonly JsonSerializerOptions _jsonSerializerOptions;
+
+        public ExportService(IRuneService runeService, IItemService itemService, ILogger<ExportService> logger)
         {
             _runeService = runeService;
             _itemService = itemService;
+            _logger = logger;
+
+            _jsonSerializerOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
         }
 
         public async Task ExportAll()
         {
-            await Task.WhenAll(ExportItems(), ExportRunes());
-        }
+            _logger.LogInformation("Exporting all runes and items");
 
-        public async Task ExportItems()
-        {
             var itemStats = await _itemService.GetAllItems(new ItemFilter());
-
-            await Task.WhenAll(itemStats.Select(async item =>
-            {
-                var json = JsonSerializer.Serialize(item);
-
-                await File.WriteAllTextAsync(
-                    Path.Combine(Environment.CurrentDirectory, "Data", "Items", $"{item.Id}.json"), json);
-            }));
-        }
-
-        public async Task ExportRunes()
-        {
             var runeStats = await _runeService.GetAllRunes(new ItemFilter());
 
-            await Task.WhenAll(runeStats.Select(async rune =>
+            var dataset = new ItemRuneDataset
             {
-                var json = JsonSerializer.Serialize(rune);
+                Items = itemStats,
+                Runes = runeStats
+            };
 
-                await File.WriteAllTextAsync(
-                    Path.Combine(Environment.CurrentDirectory, "Data", "Runes", $"{rune.Id}.json"), json);
-            }));
+            var json = JsonSerializer.Serialize(dataset, _jsonSerializerOptions);
+
+            await File.WriteAllTextAsync(
+                Path.Combine(Environment.CurrentDirectory, "Data", "dataset.json"), json);
         }
     }
 }
