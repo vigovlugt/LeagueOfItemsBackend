@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <RootNamespace>LeagueOfItems.ConsoleApp</RootNamespace>
+        <AssemblyName>LeagueOfItems.ConsoleApp</AssemblyName>
+        <TargetFramework>net5.0</TargetFramework>
+        <OutputType>Exe</OutputType>
+      <UserSecretsId>1797f558-30e9-46b9-b30c-d881b76731f7</UserSecretsId>
+  </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Application\Application.csproj" />
+        <ProjectReference Include="..\Domain\Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    </ItemGroup>
+
+</Project>
