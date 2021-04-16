@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using LeagueOfItems.Application.Contexts;
+using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Domain.Models.Ugg;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -26,10 +26,10 @@ namespace LeagueOfItems.Application.Services
 
         private readonly string _baseUrl = "https://stats2.u.gg/";
         private readonly HttpClient _client;
-        private readonly ItemContext _context;
+        private readonly IApplicationDbContext _context;
 
         public UggDataService(ILogger<UggDataService> logger, IRiotDataService riotDataService,
-            IHttpClientFactory clientFactory, ItemContext context)
+            IHttpClientFactory clientFactory, IApplicationDbContext context)
         {
             _logger = logger;
             _riotDataService = riotDataService;

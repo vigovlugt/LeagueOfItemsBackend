@@ -1,5 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using LeagueOfItems.Application;
+using LeagueOfItems.ConsoleApp.Services;
+using LeagueOfItems.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +22,8 @@ namespace LeagueOfItems.ConsoleApp
                 .ConfigureServices((_, services) =>
                 {
                     services.AddHostedService<ConsoleService>();
-                    Startup.ConfigureServices(services);
+                    services.AddApplication();
+                    services.AddInfrastructure();
                 })
                 .ConfigureAppConfiguration(config =>
                     config

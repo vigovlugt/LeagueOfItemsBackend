@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using LeagueOfItems.Application.Contexts;
+using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Domain.Models;
 using LeagueOfItems.Domain.Models.Filters;
 using LeagueOfItems.Domain.Models.Ugg;
@@ -17,9 +17,9 @@ namespace LeagueOfItems.Application.Services
 
     public class ItemService : IItemService
     {
-        private readonly ItemContext _context;
+        private readonly IApplicationDbContext _context;
 
-        public ItemService(ItemContext context)
+        public ItemService(IApplicationDbContext context)
         {
             _context = context;
         }

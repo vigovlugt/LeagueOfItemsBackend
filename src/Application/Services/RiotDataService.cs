@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using LeagueOfItems.Application.Contexts;
+using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Domain.Models;
 using LeagueOfItems.Domain.Models.Riot;
 using Microsoft.EntityFrameworkCore;
@@ -34,14 +34,14 @@ namespace LeagueOfItems.Application.Services
     public class RiotDataService : IRiotDataService
     {
         private readonly ILogger<RiotDataService> _logger;
-        private readonly ItemContext _context;
+        private readonly IApplicationDbContext _context;
 
         private readonly string _baseUrl = "https://ddragon.leagueoflegends.com/";
         private readonly HttpClient _client;
 
         private string _version;
 
-        public RiotDataService(ILogger<RiotDataService> logger, IHttpClientFactory clientFactory, ItemContext context)
+        public RiotDataService(ILogger<RiotDataService> logger, IHttpClientFactory clientFactory, IApplicationDbContext context)
         {
             _logger = logger;
             _context = context;
