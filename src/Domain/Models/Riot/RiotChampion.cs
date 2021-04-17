@@ -16,7 +16,7 @@ namespace LeagueOfItems.Domain.Models.Riot
         public string Partype { get; set; }
         public ChampionStats Stats { get; set; }
     }
-    
+
     public class ChampionInfo
     {
         public int Attack { get; set; }

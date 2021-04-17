@@ -6,6 +6,7 @@ namespace LeagueOfItems.Domain.Models.Ugg
     {
         public int ChampionId { get; set; }
 
-        public Dictionary<UggRegion, Dictionary<UggRank, Dictionary<UggRole, (List<UggSimpleStarterSetData>, List<List<UggSimpleItemData>>)>>> Data { get; set; }
+        public Dictionary<UggRegion, Dictionary<UggRank,
+            Dictionary<UggRole, (List<UggSimpleStarterSetData>, List<List<UggSimpleItemData>>)>>> Data { get; set; }
     }
 }

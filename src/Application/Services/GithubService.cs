@@ -15,15 +15,15 @@ namespace LeagueOfItems.Application.Services
 
     public class GithubService : IGithubService
     {
-        private GitHubClient _client;
-        private readonly IRuneService _runeService;
+        private readonly GitHubClient _client;
         private readonly IItemService _itemService;
-        private readonly ILogger<GithubService> _logger;
         private readonly JsonSerializerOptions _jsonSerializerOptions;
+        private readonly ILogger<GithubService> _logger;
+        private readonly string _owner;
+        private readonly string _path;
 
-        private string _repository;
-        private string _owner;
-        private string _path;
+        private readonly string _repository;
+        private readonly IRuneService _runeService;
 
         public GithubService(IConfiguration configuration, IRuneService runeService, IItemService itemService,
             ILogger<GithubService> logger)
@@ -44,6 +44,20 @@ namespace LeagueOfItems.Application.Services
             _repository = configuration["Github:Repository"];
             _owner = configuration["Github:Owner"];
             _path = configuration["Github:Path"];
+        }
+
+
+        public async Task StoreDataset()
+        {
+            _logger.LogInformation("Storing Dataset in Github");
+
+            var json = await GetDatasetJson();
+            var sha = await GetGithubDatasetSha();
+
+            var updateFileRequest = new UpdateFileRequest("Update League of Items dataset", json, sha);
+            await _client.Repository.Content.UpdateFile(_owner, _repository, _path, updateFileRequest);
+
+            _logger.LogInformation("Dataset updated in Github");
         }
 
         private async Task<string> GetDatasetJson()
@@ -69,20 +83,6 @@ namespace LeagueOfItems.Application.Services
             _logger.LogInformation("Got Dataset Github SHA {Sha}", contents[0].Sha);
 
             return contents[0].Sha;
-        }
-
-
-        public async Task StoreDataset()
-        {
-            _logger.LogInformation("Storing Dataset in Github");
-            
-            var json = await GetDatasetJson();
-            var sha = await GetGithubDatasetSha();
-
-            var updateFileRequest = new UpdateFileRequest("Update League of Items dataset", json, sha);
-            await _client.Repository.Content.UpdateFile(_owner, _repository, _path, updateFileRequest);
-            
-            _logger.LogInformation("Dataset updated in Github");
         }
     }
 }

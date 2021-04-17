@@ -17,8 +17,9 @@ namespace LeagueOfItems.ConsoleApp
             await CreateHostBuilder(args).RunConsoleAsync();
         }
 
-        private static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureServices((_, services) =>
                 {
                     services.AddHostedService<ConsoleService>();
@@ -40,5 +41,6 @@ namespace LeagueOfItems.ConsoleApp
                         .WriteTo.Seq("http://localhost:5341")
                         .WriteTo.Console();
                 });
+        }
     }
 }

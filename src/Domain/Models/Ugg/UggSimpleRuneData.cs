@@ -9,11 +9,11 @@
             Wins = wins;
             Matches = matches;
         }
-        
+
         public int RuneId { get; set; }
-        
+
         public int Tier { get; set; }
-        
+
         public int Wins { get; set; }
         public int Matches { get; set; }
     }

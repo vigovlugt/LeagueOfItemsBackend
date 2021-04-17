@@ -1,10 +1,8 @@
-using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Domain.Models;
 using LeagueOfItems.Domain.Models.Ugg;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LeagueOfItems.Application.Common.Interfaces
 {
@@ -21,9 +19,9 @@ namespace LeagueOfItems.Application.Common.Interfaces
 
         DbSet<UggStarterSetData> StarterSetData { get; set; }
         DbSet<UggStarterSetItem> StarterSetItems { get; set; }
-        
-        
-        Task<int> SaveChangesAsync();
         DatabaseFacade Database { get; }
+
+
+        Task<int> SaveChangesAsync();
     }
 }

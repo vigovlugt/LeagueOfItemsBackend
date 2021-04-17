@@ -9,11 +9,11 @@ namespace LeagueOfItems.ConsoleApp.Services
 {
     public class ConsoleService : IHostedService
     {
-        private readonly IRiotDataService _riotDataService;
-        private readonly IUggDataService _uggDataService;
-        private readonly ILogger<ConsoleService> _logger;
         private readonly IHostApplicationLifetime _appLifetime;
         private readonly IGithubService _githubService;
+        private readonly ILogger<ConsoleService> _logger;
+        private readonly IRiotDataService _riotDataService;
+        private readonly IUggDataService _uggDataService;
 
         public ConsoleService(IRiotDataService riotDataService, IUggDataService uggDataService,
             ILogger<ConsoleService> logger, IHostApplicationLifetime appLifetime,

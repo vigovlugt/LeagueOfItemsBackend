@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -16,7 +17,7 @@ namespace LeagueOfItems.Application.Services
         Task<List<RiotItem>> GetItems();
         Task SaveItems(List<Item> items);
         Task DeleteItems();
-        
+
         Task<List<RiotChampion>> GetChampions();
         Task SaveChampions(List<Champion> champions);
         Task DeleteChampions();
@@ -33,15 +34,15 @@ namespace LeagueOfItems.Application.Services
 
     public class RiotDataService : IRiotDataService
     {
-        private readonly ILogger<RiotDataService> _logger;
-        private readonly IApplicationDbContext _context;
-
         private readonly string _baseUrl = "https://ddragon.leagueoflegends.com/";
         private readonly HttpClient _client;
+        private readonly IApplicationDbContext _context;
+        private readonly ILogger<RiotDataService> _logger;
 
         private string _version;
 
-        public RiotDataService(ILogger<RiotDataService> logger, IHttpClientFactory clientFactory, IApplicationDbContext context)
+        public RiotDataService(ILogger<RiotDataService> logger, IHttpClientFactory clientFactory,
+            IApplicationDbContext context)
         {
             _logger = logger;
             _context = context;
@@ -72,10 +73,7 @@ namespace LeagueOfItems.Application.Services
 
         public async Task<string> GetCurrentVersion()
         {
-            if (_version != null)
-            {
-                return _version;
-            }
+            if (_version != null) return _version;
 
             var response = await _client.GetAsync(_baseUrl + "api/versions.json");
             response.EnsureSuccessStatusCode();
@@ -83,6 +81,8 @@ namespace LeagueOfItems.Application.Services
             await using var responseStream = await response.Content.ReadAsStreamAsync();
 
             var versions = await JsonSerializer.DeserializeAsync<List<string>>(responseStream);
+            if (versions == null || versions.Count == 0) throw new ArgumentException("No LOL versions found");
+
             _version = versions[0];
 
             _logger.LogInformation("Current version {Version}", _version);
@@ -116,11 +116,9 @@ namespace LeagueOfItems.Application.Services
                 {
                     PropertyNameCaseInsensitive = true
                 });
+            if (itemResponse == null) throw new ArgumentException("LOL items endpoint returned null");
 
-            foreach (var (id, item) in itemResponse.Data)
-            {
-                item.Id = id;
-            }
+            foreach (var (id, item) in itemResponse.Data) item.Id = id;
 
             var items = itemResponse.Data.Values.ToList();
 
@@ -160,6 +158,7 @@ namespace LeagueOfItems.Application.Services
                 {
                     PropertyNameCaseInsensitive = true
                 });
+            if (championResponse == null) throw new ArgumentException("LOL champions endpoint returned null");
 
             _logger.LogInformation("{ChampionAmount} items found", championResponse.Data.Values.Count);
 

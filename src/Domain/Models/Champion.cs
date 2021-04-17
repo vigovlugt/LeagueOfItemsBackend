@@ -8,7 +8,7 @@ namespace LeagueOfItems.Domain.Models
         public string Name { get; set; }
         public string Title { get; set; }
         public string Blurb { get; set; }
-        
+
         public string RiotId { get; set; }
 
         public static Champion FromRiotChampion(RiotChampion riotChampion)

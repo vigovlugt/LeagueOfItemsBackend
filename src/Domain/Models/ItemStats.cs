@@ -5,12 +5,6 @@ namespace LeagueOfItems.Domain.Models
 {
     public class ItemStats : Item
     {
-        public int Wins { get; set; }
-        public int Matches { get; set; }
-        public List<ChampionStats> ChampionStats { get; set; }
-
-        public List<OrderStats> OrderStats { get; set; }
-
         public ItemStats(Item item) : base(item)
         {
             Wins = ItemData.Select(d => d.Wins).Aggregate(0, (a, b) => a + b);
@@ -53,5 +47,11 @@ namespace LeagueOfItems.Domain.Models
 
             OrderStats = OrderStats.OrderBy(o => o.Order).ToList();
         }
+
+        public int Wins { get; set; }
+        public int Matches { get; set; }
+        public List<ChampionStats> ChampionStats { get; set; }
+
+        public List<OrderStats> OrderStats { get; set; }
     }
 }

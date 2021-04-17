@@ -20,7 +20,7 @@ namespace LeagueOfItems.Domain.Models
                 Matches = itemData.Select(d => d.Matches).Aggregate(0, (a, b) => a + b)
             };
         }
-        
+
         public static ChampionStats FromRuneStats(int championId, List<UggRuneData> runeData)
         {
             return new()

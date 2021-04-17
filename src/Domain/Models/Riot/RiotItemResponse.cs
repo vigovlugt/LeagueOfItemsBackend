@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
-namespace LeagueOfItems.Domain.Models.Riot { 
-
+namespace LeagueOfItems.Domain.Models.Riot
+{
     public class RiotItemResponse
     {
         public string Type { get; set; }
@@ -11,7 +11,7 @@ namespace LeagueOfItems.Domain.Models.Riot {
         public List<Group> Groups { get; set; }
         public List<Tree> Tree { get; set; }
     }
-    
+
     public class Basic
     {
         public string Name { get; set; }
@@ -36,13 +36,13 @@ namespace LeagueOfItems.Domain.Models.Riot {
         public List<object> Tags { get; set; }
         public Dictionary<int, bool> Maps { get; set; }
     }
-    
+
     public class Tree
     {
         public string Header { get; set; }
         public List<string> Tags { get; set; }
     }
-    
+
     public class Group
     {
         public string Id { get; set; }

@@ -1,7 +1,5 @@
 using LeagueOfItems.Application.Common.Interfaces;
-using LeagueOfItems.Application.Services;
 using LeagueOfItems.Infrastructure.Data;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LeagueOfItems.Infrastructure

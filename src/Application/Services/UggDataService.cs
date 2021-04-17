@@ -21,12 +21,12 @@ namespace LeagueOfItems.Application.Services
 
     public class UggDataService : IUggDataService
     {
-        private readonly ILogger<UggDataService> _logger;
-        private readonly IRiotDataService _riotDataService;
-
         private readonly string _baseUrl = "https://stats2.u.gg/";
+        
         private readonly HttpClient _client;
         private readonly IApplicationDbContext _context;
+        private readonly ILogger<UggDataService> _logger;
+        private readonly IRiotDataService _riotDataService;
 
         public UggDataService(ILogger<UggDataService> logger, IRiotDataService riotDataService,
             IHttpClientFactory clientFactory, IApplicationDbContext context)
@@ -63,6 +63,20 @@ namespace LeagueOfItems.Application.Services
             await SaveRuneData(runeData);
         }
 
+        public async Task DeleteItemData()
+        {
+            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM ItemData;");
+
+            _logger.LogInformation("{ItemDataAmount} ItemData rows deleted", deleted);
+        }
+
+        public async Task DeleteRuneData()
+        {
+            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM RuneData;");
+
+            _logger.LogInformation("{RuneDataAmount} RuneData rows deleted", deleted);
+        }
+
         private async Task<Stream> GetUggDataStream(int championId, string type)
         {
             var versions = await _riotDataService.GetVersions();
@@ -76,10 +90,7 @@ namespace LeagueOfItems.Application.Services
                     await _client.GetAsync(_baseUrl +
                                            $"lol/1.1/table/{type}/{uggVersion}/ranked_solo_5x5/{championId}/1.4.0.json");
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadAsStreamAsync();
-                }
+                if (response.IsSuccessStatusCode) return await response.Content.ReadAsStreamAsync();
 
                 _logger.LogWarning("Version {Version} does not have UGG data", version);
             }
@@ -149,10 +160,8 @@ namespace LeagueOfItems.Application.Services
                         for (var i = 0; i < uggItemDataByOrder.Count; i++)
                         {
                             if (i == 1)
-                            {
                                 // TODO handle boots
                                 continue;
-                            }
 
                             var uggItemData = uggItemDataByOrder[i];
 
@@ -167,7 +176,7 @@ namespace LeagueOfItems.Application.Services
                                 Order = order,
                                 Rank = rank,
                                 Region = region,
-                                Role = role,
+                                Role = role
                             }));
                         }
                     }
@@ -211,13 +220,6 @@ namespace LeagueOfItems.Application.Services
             var ranks = new List<UggRank> {UggRank.PlatinumPlus}; // UggRank.Challenger, UggRank.Overall
 
             return data.Where(itemData => regions.Contains(itemData.Region) && ranks.Contains(itemData.Rank)).ToList();
-        }
-
-        public async Task DeleteItemData()
-        {
-            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM ItemData;");
-
-            _logger.LogInformation("{ItemDataAmount} ItemData rows deleted", deleted);
         }
 
         private async Task SaveItemData(List<UggItemData> itemData)
@@ -326,13 +328,6 @@ namespace LeagueOfItems.Application.Services
                 .Select(pair => new UggSimpleRuneData(pair.Key, 1, pair.Value[0], pair.Value[1])));
 
             return runeDataList;
-        }
-
-        public async Task DeleteRuneData()
-        {
-            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM RuneData;");
-
-            _logger.LogInformation("{RuneDataAmount} RuneData rows deleted", deleted);
         }
 
         private async Task SaveRuneData(List<UggRuneData> runeData)

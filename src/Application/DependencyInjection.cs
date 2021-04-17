@@ -12,7 +12,7 @@ namespace LeagueOfItems.Application
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IRuneService, RuneService>();
             services.AddScoped<IGithubService, GithubService>();
-            
+
             services.AddHttpClient();
 
             return services;
