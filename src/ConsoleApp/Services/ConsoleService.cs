@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using LeagueOfItems.Application.Services;
+using LeagueOfItems.Application.Champions.Commands;
+using LeagueOfItems.Application.Github.Commands;
+using LeagueOfItems.Application.Items.Commands;
+using LeagueOfItems.Application.Riot.Queries;
+using LeagueOfItems.Application.Runes.Commands;
+using MediatR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -10,20 +15,14 @@ namespace LeagueOfItems.ConsoleApp.Services
     public class ConsoleService : IHostedService
     {
         private readonly IHostApplicationLifetime _appLifetime;
-        private readonly IGithubService _githubService;
         private readonly ILogger<ConsoleService> _logger;
-        private readonly IRiotDataService _riotDataService;
-        private readonly IUggDataService _uggDataService;
+        private readonly IMediator _mediator;
 
-        public ConsoleService(IRiotDataService riotDataService, IUggDataService uggDataService,
-            ILogger<ConsoleService> logger, IHostApplicationLifetime appLifetime,
-            IGithubService githubService)
+        public ConsoleService(ILogger<ConsoleService> logger, IHostApplicationLifetime appLifetime, IMediator mediator)
         {
-            _riotDataService = riotDataService;
-            _uggDataService = uggDataService;
             _logger = logger;
             _appLifetime = appLifetime;
-            _githubService = githubService;
+            _mediator = mediator;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -42,21 +41,30 @@ namespace LeagueOfItems.ConsoleApp.Services
                 switch (args[1])
                 {
                     case "riot":
-                        await _riotDataService.SaveAll();
+                        var version = await _mediator.Send(new GetRiotVersionQuery(), cancellationToken);
+
+                        await _mediator.Send(new GetRiotChampionDataCommand(version), cancellationToken);
+                        await _mediator.Send(new GetRiotItemDataCommand(version), cancellationToken);
+                        await _mediator.Send(new GetRiotRuneDataCommand(version), cancellationToken);
+
                         break;
                     case "ugg":
-                        await _uggDataService.SaveForAllChampions();
+                        await _mediator.Send(new GetUggItemDataCommand(), cancellationToken);
+                        await _mediator.Send(new GetUggRuneDataCommand(), cancellationToken);
+
                         break;
                     case "github":
-                        await _githubService.StoreDataset();
+                        await _mediator.Send(new UploadGithubCommand(), cancellationToken);
+
                         break;
                     case "empty-db":
-                        await _riotDataService.DeleteChampions();
-                        await _riotDataService.DeleteRunes();
-                        await _riotDataService.DeleteItems();
+                        await _mediator.Send(new DeleteAllItemsCommand(), cancellationToken);
+                        await _mediator.Send(new DeleteAllRunesCommand(), cancellationToken);
+                        await _mediator.Send(new DeleteAllChampionsCommand(), cancellationToken);
 
-                        await _uggDataService.DeleteItemData();
-                        await _uggDataService.DeleteRuneData();
+                        await _mediator.Send(new DeleteAllItemDataCommand(), cancellationToken);
+                        await _mediator.Send(new DeleteAllRuneDataCommand(), cancellationToken);
+
                         break;
                 }
 

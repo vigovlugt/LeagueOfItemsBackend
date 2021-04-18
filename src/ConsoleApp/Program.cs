@@ -34,13 +34,7 @@ namespace LeagueOfItems.ConsoleApp
                         .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
                             true))
                 .UseSerilog((hostContext, loggerConfiguration) =>
-                {
-                    loggerConfiguration
-                        .ReadFrom.Configuration(hostContext.Configuration)
-                        .Enrich.FromLogContext()
-                        .WriteTo.Seq("http://localhost:5341")
-                        .WriteTo.Console();
-                });
+                    loggerConfiguration.ReadFrom.Configuration(hostContext.Configuration));
         }
     }
 }
