@@ -8,5 +8,6 @@ namespace LeagueOfItems.Domain.Models
         public List<ItemStats> Items { get; set; }
         public List<RuneStats> Runes { get; set; }
         public DateTime Date { get; set; } = DateTime.Now;
+        public string Version { get; set; }
     }
 }

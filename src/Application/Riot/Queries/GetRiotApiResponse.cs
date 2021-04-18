@@ -1,39 +1,33 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 
-namespace LeagueOfItems.Application.Ugg.Queries
+namespace LeagueOfItems.Application.Riot.Queries
 {
-    public record GetUggApiResponse : IRequest<Stream>
+    public record GetRiotApiResponse : IRequest<Stream>
     {
-        public string Version { get; set; }
-        public int ChampionId { get; set; }
-        public string Type { get; set; }
+        public string Url { get; init; }
     }
 
-    public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Stream>
+    public class GetRiotApiResponseHandler : IRequestHandler<GetRiotApiResponse, Stream>
     {
         private readonly HttpClient _client;
 
-        public GetUggApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration)
+        public GetRiotApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration)
         {
             _client = clientFactory.CreateClient();
-            _client.BaseAddress = new Uri(configuration["Ugg:ApiUrl"]);
+            _client.BaseAddress = new Uri(configuration["Riot:ApiUrl"]);
         }
 
-        public async Task<Stream> Handle(GetUggApiResponse request, CancellationToken cancellationToken)
+        public async Task<Stream> Handle(GetRiotApiResponse request, CancellationToken cancellationToken)
         {
-            var uggVersion = string.Join('_', request.Version.Split(".").Take(2));
+            var response = await _client.GetAsync(request.Url, cancellationToken);
 
-            var requestUri =
-                $"lol/1.1/table/{request.Type}/{uggVersion}/ranked_solo_5x5/{request.ChampionId}/1.4.0.json";
-
-            var response = await _client.GetAsync(requestUri, cancellationToken);
+            response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStreamAsync(cancellationToken);
         }

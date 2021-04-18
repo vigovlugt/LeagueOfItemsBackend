@@ -21,7 +21,6 @@ namespace LeagueOfItems.Application.Common.Interfaces
         DbSet<UggStarterSetItem> StarterSetItems { get; set; }
         DatabaseFacade Database { get; }
 
-
         Task<int> SaveChangesAsync();
     }
 }
