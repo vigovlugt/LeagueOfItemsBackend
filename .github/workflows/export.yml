@@ -1,0 +1,45 @@
+name: Export Dataset
+
+on:
+  push:
+    branches: [ master ]
+  schedule:
+    - cron: '0 * * * *'
+
+defaults:
+  run:
+    working-directory: src/ConsoleApp/
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      
+    
+      
+    - name: Download data from Riot
+      run: dotnet bin/Debug/net5.0/LeagueOfItems.ConsoleApp.dll riot
+      env:
+        "Github:Token": ${{ secrets.Token }}
+        
+    - name: Download data from U.GG
+      run: dotnet bin/Debug/net5.0/LeagueOfItems.ConsoleApp.dll ugg
+      env:
+        "Github:Token": ${{ secrets.Token }}
+        
+    - name: Export data to frontend Github
+      run: dotnet bin/Debug/net5.0/LeagueOfItems.ConsoleApp.dll github
+      env:
+        "Github:Token": ${{ secrets.Token }}

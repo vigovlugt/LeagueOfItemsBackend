@@ -35,7 +35,7 @@ namespace LeagueOfItems.Domain.Models
         public string Plaintext { get; set; }
         public int Depth { get; set; }
 
-        [JsonIgnore] public List<UggItemData> ItemData { get; set; }
+        [JsonIgnore] public List<UggItemData> ItemData { get; set; } = new();
 
         public static Item FromRiotItem(RiotItem riotItem)
         {

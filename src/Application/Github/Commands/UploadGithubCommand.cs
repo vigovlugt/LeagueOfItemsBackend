@@ -28,7 +28,7 @@ namespace LeagueOfItems.Application.Github.Commands
         private readonly string _path;
         private readonly IMediator _mediator;
 
-        public UploadGithubCommandHandler(ILogger<UploadGithubCommandHandler> logger, IHttpClient client,
+        public UploadGithubCommandHandler(ILogger<UploadGithubCommandHandler> logger,
             IConfiguration configuration, IMediator mediator)
         {
             _logger = logger;
@@ -74,18 +74,15 @@ namespace LeagueOfItems.Application.Github.Commands
         {
             _logger.LogInformation("Getting Dataset as JSON");
 
-
-            var itemStats = _mediator.Send(new GetAllItemsQuery());
-            var runeStats = _mediator.Send(new GetAllRunesQuery());
-            var version = _mediator.Send(new GetUggVersionQuery());
-
-            await Task.WhenAll(itemStats, runeStats, version);
+            var itemStats = await _mediator.Send(new GetAllItemsQuery());
+            var runeStats = await _mediator.Send(new GetAllRunesQuery());
+            var version = await _mediator.Send(new GetUggVersionQuery());
 
             var dataset = new ItemRuneDataset
             {
-                Items = itemStats.Result,
-                Runes = runeStats.Result,
-                Version = version.Result
+                Items = itemStats,
+                Runes = runeStats,
+                Version = version
             };
 
             return JsonSerializer.Serialize(dataset, _jsonSerializerOptions);
