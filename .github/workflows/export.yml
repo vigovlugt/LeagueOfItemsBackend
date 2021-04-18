@@ -30,16 +30,16 @@ jobs:
     
       
     - name: Download data from Riot
-      run: dotnet bin/Debug/net5.0/LeagueOfItems.ConsoleApp.dll riot
+      run: dotnet bin/Release/net5.0/LeagueOfItems.ConsoleApp.dll riot
       env:
         "Github:Token": ${{ secrets.Token }}
         
     - name: Download data from U.GG
-      run: dotnet bin/Debug/net5.0/LeagueOfItems.ConsoleApp.dll ugg
+      run: dotnet bin/Release/net5.0/LeagueOfItems.ConsoleApp.dll ugg
       env:
         "Github:Token": ${{ secrets.Token }}
         
     - name: Export data to frontend Github
-      run: dotnet bin/Debug/net5.0/LeagueOfItems.ConsoleApp.dll github
+      run: dotnet bin/Release/net5.0/LeagueOfItems.ConsoleApp.dll github
       env:
         "Github:Token": ${{ secrets.Token }}
