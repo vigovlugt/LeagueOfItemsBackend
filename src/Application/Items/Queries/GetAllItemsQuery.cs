@@ -25,6 +25,7 @@ namespace LeagueOfItems.Application.Items.Queries
         public async Task<List<ItemStats>> Handle(GetAllItemsQuery request, CancellationToken cancellationToken)
         {
             var items = await _context.Items
+                .Include(i => i.ItemData)
                 .Where(i => i.ItemData.Count != 0)
                 .OrderBy(i => i.Name)
                 .ToListAsync(cancellationToken: cancellationToken);
