@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Application.Riot.Queries;
-using LeagueOfItems.Domain.Models;
+using LeagueOfItems.Domain.Models.Champions;
 using LeagueOfItems.Domain.Models.Riot;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -19,7 +19,7 @@ namespace LeagueOfItems.Application.Champions.Commands
         {
             Version = version;
         }
-        
+
         public string Version { get; init; }
     }
 
@@ -80,7 +80,7 @@ namespace LeagueOfItems.Application.Champions.Commands
 
         private static List<Champion> ParseRiotChampions(List<RiotChampion> champions)
         {
-            return champions.Select(Champion.FromRiotChampion).ToList();
+            return champions.Select(c => new Champion(c)).ToList();
         }
     }
 }

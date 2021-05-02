@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using LeagueOfItems.Application.Champions.Queries;
 using LeagueOfItems.Application.Items.Queries;
 using LeagueOfItems.Application.Runes.Queries;
 using LeagueOfItems.Application.Ugg.Queries;
@@ -9,7 +10,6 @@ using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Octokit;
-using Octokit.Internal;
 
 namespace LeagueOfItems.Application.Github.Commands
 {
@@ -76,12 +76,14 @@ namespace LeagueOfItems.Application.Github.Commands
 
             var itemStats = await _mediator.Send(new GetAllItemsQuery());
             var runeStats = await _mediator.Send(new GetAllRunesQuery());
+            var championStats = await _mediator.Send(new GetAllChampionsQuery());
             var version = await _mediator.Send(new GetUggVersionQuery());
 
             var dataset = new ItemRuneDataset
             {
                 Items = itemStats,
                 Runes = runeStats,
+                Champions = championStats,
                 Version = version
             };
 

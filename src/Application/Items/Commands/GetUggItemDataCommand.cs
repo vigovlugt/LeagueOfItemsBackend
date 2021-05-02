@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Application.Items.Services;
 using LeagueOfItems.Application.Ugg.Queries;
 using LeagueOfItems.Application.Ugg.Services;
-using LeagueOfItems.Domain.Models;
-using LeagueOfItems.Domain.Models.Ugg;
+using LeagueOfItems.Domain.Models.Champions;
+using LeagueOfItems.Domain.Models.Items;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -49,37 +48,25 @@ namespace LeagueOfItems.Application.Items.Commands
             return Unit.Value;
         }
 
-        private async Task<List<UggItemData>> GetItemDataForChampion(string version, Champion champion)
+        private async Task<List<ItemData>> GetItemDataForChampion(string version, Champion champion)
         {
             _logger.LogInformation("Downloading Item data for {Champion}", champion.Name);
 
-            var rawItemData = await DownloadUggItemData(version, champion.Id);
+            await using var responseStream = await _mediator.Send(new GetUggApiResponse
+            {
+                ChampionId = champion.Id,
+                Type = "items",
+                Version = version
+            });
 
-            var parsedItemData = UggItemDataParser.Parse(champion.Id, rawItemData);
+            var parsedItemData = await UggItemDataParser.Parse(champion.Id, responseStream);
 
             var filteredItemData = UggDataFilterer.Filter(parsedItemData);
 
             return filteredItemData;
         }
 
-        private async Task<Dictionary<int, Dictionary<int, Dictionary<int, List<List<JsonElement>>>>>>
-            DownloadUggItemData(string version, int championId)
-        {
-            await using var responseStream = await _mediator.Send(new GetUggApiResponse
-            {
-                ChampionId = championId,
-                Type = "items",
-                Version = version
-            });
-
-            var itemData = await JsonSerializer
-                .DeserializeAsync<Dictionary<int, Dictionary<int, Dictionary<int, List<List<JsonElement>>>>>>(
-                    responseStream);
-
-            return itemData;
-        }
-
-        private async Task SaveItemData(List<UggItemData> itemData)
+        private async Task SaveItemData(List<ItemData> itemData)
         {
             await _mediator.Send(new DeleteAllItemDataCommand());
 

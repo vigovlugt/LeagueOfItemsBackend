@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
-using LeagueOfItems.Domain.Models;
+using LeagueOfItems.Domain.Models.Champions;
+using LeagueOfItems.Domain.Models.Items;
+using LeagueOfItems.Domain.Models.Runes;
 using LeagueOfItems.Domain.Models.Ugg;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -19,11 +21,9 @@ namespace LeagueOfItems.Infrastructure.Data
         public DbSet<RunePath> RunePaths { get; set; }
         public DbSet<Rune> Runes { get; set; }
 
-        public DbSet<UggItemData> ItemData { get; set; }
-        public DbSet<UggRuneData> RuneData { get; set; }
-
-        public DbSet<UggStarterSetData> StarterSetData { get; set; }
-        public DbSet<UggStarterSetItem> StarterSetItems { get; set; }
+        public DbSet<ItemData> ItemData { get; set; }
+        public DbSet<RuneData> RuneData { get; set; }
+        public DbSet<ChampionData> ChampionData { get; set; }
 
         public Task<int> SaveChangesAsync()
         {
@@ -34,7 +34,10 @@ namespace LeagueOfItems.Infrastructure.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Filename=../../data.db");
+            optionsBuilder.UseSqlite("Filename=../../data.db",
+                b => b
+                    .MigrationsAssembly("LeagueOfItems.ConsoleApp")
+                    .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -52,19 +55,14 @@ namespace LeagueOfItems.Infrastructure.Data
                 .WithOne(b => b.RunePath)
                 .IsRequired();
 
-            modelBuilder.Entity<UggItemData>()
+            modelBuilder.Entity<ItemData>()
                 .HasKey(i => new {i.ItemId, i.ChampionId, i.Rank, i.Order, i.Region, i.Role});
 
-            modelBuilder.Entity<UggRuneData>()
+            modelBuilder.Entity<RuneData>()
                 .HasKey(i => new {i.RuneId, i.ChampionId, i.Rank, i.Tier, i.Region, i.Role});
 
-            modelBuilder.Entity<UggStarterSetData>()
-                .HasMany(p => p.Items)
-                .WithOne(b => b.UggStarterSet)
-                .IsRequired();
-
-            modelBuilder.Entity<UggStarterSetItem>()
-                .HasKey(i => new {i.StarterSetId, i.ItemId});
+            modelBuilder.Entity<ChampionData>()
+                .HasKey(i => new {i.ChampionId, i.Rank, i.Region, i.Role});
         }
     }
 }

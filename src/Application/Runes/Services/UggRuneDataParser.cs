@@ -1,47 +1,39 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using LeagueOfItems.Application.Ugg.Services;
+using LeagueOfItems.Domain.Models.Runes;
 using LeagueOfItems.Domain.Models.Ugg;
 
 namespace LeagueOfItems.Application.Runes.Services
 {
     public static class UggRuneDataParser
     {
-        public static List<UggRuneData> Parse(
+        public static async Task<List<RuneData>> Parse(
             int championId,
-            Dictionary<int, Dictionary<int, Dictionary<int, List<Dictionary<int, List<int>>>>>> data)
+            Stream stream)
         {
-            var runeDataList = new List<UggRuneData>();
-
-            foreach (var (regionIndex, rankRoleData) in data)
-            {
-                var region = (UggRegion) regionIndex;
-
-                foreach (var (rankIndex, roleData) in rankRoleData)
+            var parsed = await UggResponseParser.Parse<List<Dictionary<int, List<int>>>, List<RuneData>>(stream,
+                (region, rank, role, data) =>
                 {
-                    var rank = (UggRank) rankIndex;
+                    var simpleRuneData = ParseRuneData(data);
 
-                    foreach (var (roleIndex, itemData) in roleData)
+                    return simpleRuneData.Select(uggSimpleRune => new RuneData
                     {
-                        var role = (UggRole) roleIndex;
+                        ChampionId = championId,
+                        Rank = rank,
+                        Role = role,
+                        Region = region,
+                        RuneId = uggSimpleRune.RuneId,
+                        Matches = uggSimpleRune.Matches,
+                        Wins = uggSimpleRune.Wins,
+                        Tier = uggSimpleRune.Tier
+                    }).ToList();
+                });
 
-                        var simpleRuneData = ParseRuneData(itemData);
 
-                        runeDataList.AddRange(simpleRuneData.Select(uggSimpleRune => new UggRuneData
-                        {
-                            ChampionId = championId,
-                            Rank = rank,
-                            Role = role,
-                            Region = region,
-                            RuneId = uggSimpleRune.RuneId,
-                            Matches = uggSimpleRune.Matches,
-                            Wins = uggSimpleRune.Wins,
-                            Tier = uggSimpleRune.Tier
-                        }));
-                    }
-                }
-            }
-
-            return runeDataList;
+            return parsed.SelectMany(x => x).ToList();
         }
 
         private static List<UggSimpleRuneData>

@@ -1,11 +1,11 @@
-﻿using LeagueOfItems.Domain.Models.Ugg;
+﻿using LeagueOfItems.Domain.Models.Common;
 
 namespace LeagueOfItems.Domain.Models.Filters
 {
     public class ItemFilter
     {
-        public UggRole Role { get; set; } = UggRole.None;
-        public UggRegion Region { get; set; } = UggRegion.World;
-        public UggRank Rank { get; set; } = UggRank.PlatinumPlus;
+        public Role Role { get; set; } = Role.None;
+        public Region Region { get; set; } = Region.World;
+        public Rank Rank { get; set; } = Rank.PlatinumPlus;
     }
 }

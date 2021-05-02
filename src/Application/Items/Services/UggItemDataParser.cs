@@ -1,59 +1,54 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
+using LeagueOfItems.Application.Ugg.Services;
+using LeagueOfItems.Domain.Models.Items;
 using LeagueOfItems.Domain.Models.Ugg;
 
 namespace LeagueOfItems.Application.Items.Services
 {
     public static class UggItemDataParser
     {
-        public static List<UggItemData> Parse(
+        public static async Task<List<ItemData>> Parse(
             int championId,
-            Dictionary<int, Dictionary<int, Dictionary<int, List<List<JsonElement>>>>> data)
+            Stream stream)
         {
-            var itemDataList = new List<UggItemData>();
-
-            foreach (var (regionIndex, rankRoleData) in data)
-            {
-                var region = (UggRegion) regionIndex;
-
-                foreach (var (rankIndex, roleData) in rankRoleData)
+            var parsed = await UggResponseParser.Parse<List<List<JsonElement>>, List<ItemData>>(stream,
+                (region, rank, role, data) =>
                 {
-                    var rank = (UggRank) rankIndex;
+                    var uggItemDataByOrder = ParseItem(data);
 
-                    foreach (var (roleIndex, itemData) in roleData)
+                    var itemDataList = new List<ItemData>();
+
+                    for (var i = 0; i < uggItemDataByOrder.Count; i++)
                     {
-                        var role = (UggRole) roleIndex;
+                        if (i == 1)
+                            // TODO handle boots
+                            continue;
 
-                        var uggItemDataByOrder = ParseItem(itemData);
+                        var uggItemData = uggItemDataByOrder[i];
 
-                        for (var i = 0; i < uggItemDataByOrder.Count; i++)
+                        var order = i == 0 ? i : i - 1;
+
+                        itemDataList.AddRange(uggItemData.Select(uggItem => new ItemData
                         {
-                            if (i == 1)
-                                // TODO handle boots
-                                continue;
-
-                            var uggItemData = uggItemDataByOrder[i];
-
-                            var order = i == 0 ? i : i - 1;
-
-                            itemDataList.AddRange(uggItemData.Select(uggItem => new UggItemData
-                            {
-                                ChampionId = championId,
-                                ItemId = uggItem.ItemId,
-                                Matches = uggItem.Matches,
-                                Wins = uggItem.Wins,
-                                Order = order,
-                                Rank = rank,
-                                Region = region,
-                                Role = role
-                            }));
-                        }
+                            ChampionId = championId,
+                            ItemId = uggItem.ItemId,
+                            Matches = uggItem.Matches,
+                            Wins = uggItem.Wins,
+                            Order = order,
+                            Rank = rank,
+                            Region = region,
+                            Role = role
+                        }));
                     }
-                }
-            }
 
-            return itemDataList;
+                    return itemDataList;
+                });
+
+            return parsed.SelectMany(x => x).ToList();
         }
 
         private static List<List<UggSimpleItemData>> ParseItem(IEnumerable<List<JsonElement>> itemData)

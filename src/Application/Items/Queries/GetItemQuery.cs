@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
-using LeagueOfItems.Domain.Models;
+using LeagueOfItems.Domain.Models.Items;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +10,10 @@ namespace LeagueOfItems.Application.Items.Queries
 {
     public record GetItemQuery : IRequest<ItemStats>
     {
+        public GetItemQuery(int id)
+        {
+            Id = id;
+        }
         public int Id { get; init; }
     }
 

@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
-using LeagueOfItems.Domain.Models;
-using LeagueOfItems.Domain.Models.Ugg;
+using LeagueOfItems.Domain.Models.Champions;
+using LeagueOfItems.Domain.Models.Items;
+using LeagueOfItems.Domain.Models.Runes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -14,11 +15,10 @@ namespace LeagueOfItems.Application.Common.Interfaces
         DbSet<RunePath> RunePaths { get; set; }
         DbSet<Rune> Runes { get; set; }
 
-        DbSet<UggItemData> ItemData { get; set; }
-        DbSet<UggRuneData> RuneData { get; set; }
-
-        DbSet<UggStarterSetData> StarterSetData { get; set; }
-        DbSet<UggStarterSetItem> StarterSetItems { get; set; }
+        DbSet<ItemData> ItemData { get; set; }
+        DbSet<RuneData> RuneData { get; set; }
+        DbSet<ChampionData> ChampionData { get; set; }
+        
         DatabaseFacade Database { get; }
 
         Task<int> SaveChangesAsync();

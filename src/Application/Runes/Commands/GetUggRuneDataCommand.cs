@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Application.Runes.Services;
 using LeagueOfItems.Application.Ugg.Queries;
 using LeagueOfItems.Application.Ugg.Services;
-using LeagueOfItems.Domain.Models;
-using LeagueOfItems.Domain.Models.Ugg;
+using LeagueOfItems.Domain.Models.Champions;
+using LeagueOfItems.Domain.Models.Runes;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -49,37 +48,26 @@ namespace LeagueOfItems.Application.Runes.Commands
             return Unit.Value;
         }
 
-        private async Task<List<UggRuneData>> GetRuneDataForChampion(string version, Champion champion)
+        private async Task<List<RuneData>> GetRuneDataForChampion(string version, Champion champion)
         {
             _logger.LogInformation("Downloading Rune data for {Champion}", champion.Name);
 
-            var rawRuneData = await DownloadUggRuneData(version, champion.Id);
+            await using var responseStream = await _mediator.Send(new GetUggApiResponse
+            {
+                ChampionId = champion.Id,
+                Type = "runes",
+                Version = version
+            });
 
-            var parsedItemData = UggRuneDataParser.Parse(champion.Id, rawRuneData);
+
+            var parsedItemData = await UggRuneDataParser.Parse(champion.Id, responseStream);
 
             var filteredItemData = UggDataFilterer.Filter(parsedItemData);
 
             return filteredItemData;
         }
 
-        private async Task<Dictionary<int, Dictionary<int, Dictionary<int, List<Dictionary<int, List<int>>>>>>>
-            DownloadUggRuneData(string version, int championId)
-        {
-            await using var responseStream = await _mediator.Send(new GetUggApiResponse
-            {
-                ChampionId = championId,
-                Type = "runes",
-                Version = version
-            });
-
-            var runeData = await JsonSerializer
-                .DeserializeAsync<Dictionary<int, Dictionary<int, Dictionary<int, List<Dictionary<int, List<int>>>>>>>(
-                    responseStream);
-
-            return runeData;
-        }
-
-        private async Task SaveRuneData(List<UggRuneData> runeData)
+        private async Task SaveRuneData(List<RuneData> runeData)
         {
             await _mediator.Send(new DeleteAllRuneDataCommand());
 

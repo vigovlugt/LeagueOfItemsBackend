@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
-using LeagueOfItems.Domain.Models;
+using LeagueOfItems.Domain.Models.Runes;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +26,7 @@ namespace LeagueOfItems.Application.Runes.Queries
         {
             var rune = await _context.Runes
                 .Include(r => r.RunePath)
+                .Include(r => r.RuneData)
                 .Where(i => i.RuneData.Count != 0)
                 .SingleAsync(i => i.Id == request.Id, cancellationToken);
 

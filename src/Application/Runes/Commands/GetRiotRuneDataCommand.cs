@@ -5,8 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Application.Riot.Queries;
-using LeagueOfItems.Domain.Models;
 using LeagueOfItems.Domain.Models.Riot;
+using LeagueOfItems.Domain.Models.Runes;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

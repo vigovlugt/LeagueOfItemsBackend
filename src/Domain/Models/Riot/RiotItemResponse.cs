@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using LeagueOfItems.Domain.Models.Runes;
 
 namespace LeagueOfItems.Domain.Models.Riot
 {

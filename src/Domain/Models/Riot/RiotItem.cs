@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using LeagueOfItems.Domain.Models.Ugg;
+using LeagueOfItems.Domain.Models.Items;
 
 namespace LeagueOfItems.Domain.Models.Riot
 {
@@ -12,7 +12,7 @@ namespace LeagueOfItems.Domain.Models.Riot
         public string Plaintext { get; set; }
         public int Depth { get; set; }
 
-        public List<UggItemData> ItemData { get; set; }
+        public List<ItemData> ItemData { get; set; }
 
         public List<string> From { get; set; }
         public ItemImage Image { get; set; }

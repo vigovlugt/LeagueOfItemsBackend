@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Champions.Commands;
+using LeagueOfItems.Application.Champions.Queries;
 using LeagueOfItems.Application.Github.Commands;
 using LeagueOfItems.Application.Items.Commands;
+using LeagueOfItems.Application.Items.Queries;
 using LeagueOfItems.Application.Riot.Queries;
 using LeagueOfItems.Application.Runes.Commands;
 using MediatR;
@@ -49,6 +52,7 @@ namespace LeagueOfItems.ConsoleApp.Services
 
                         break;
                     case "ugg":
+                        await _mediator.Send(new GetUggChampionDataCommand(), cancellationToken);
                         await _mediator.Send(new GetUggItemDataCommand(), cancellationToken);
                         await _mediator.Send(new GetUggRuneDataCommand(), cancellationToken);
 
@@ -64,7 +68,27 @@ namespace LeagueOfItems.ConsoleApp.Services
 
                         await _mediator.Send(new DeleteAllItemDataCommand(), cancellationToken);
                         await _mediator.Send(new DeleteAllRuneDataCommand(), cancellationToken);
+                        break;
+                    case "champion":
+                        var champion =
+                            await _mediator.Send(new GetChampionQuery(int.Parse(args[2])), cancellationToken);
 
+                        var championJson = JsonSerializer.Serialize(champion, new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        });
+
+                        Console.WriteLine(championJson);
+                        break;
+                    case "item":
+                        var item = await _mediator.Send(new GetItemQuery(int.Parse(args[2])), cancellationToken);
+
+                        var itemJson = JsonSerializer.Serialize(item, new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        });
+
+                        Console.WriteLine(itemJson);
                         break;
                 }
 
