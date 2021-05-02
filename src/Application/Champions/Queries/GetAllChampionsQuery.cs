@@ -28,6 +28,7 @@ namespace LeagueOfItems.Application.Champions.Queries
                 .Include(c => c.ChampionData)
                 .Include(c => c.ItemData)
                 .Include(c => c.RuneData)
+                .OrderBy(c => c.Name)
                 .ToListAsync(cancellationToken);
 
             var championStats = champions.Select(c => new ChampionStats(c, c.ItemData, c.RuneData)).ToList();
