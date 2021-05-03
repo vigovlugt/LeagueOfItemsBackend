@@ -1,3 +1,5 @@
+using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +28,8 @@ namespace LeagueOfItems.Application.Github.Commands
         private readonly string _repository;
         private readonly string _owner;
         private readonly string _path;
+        private readonly string _fileName;
+
         private readonly IMediator _mediator;
 
         public UploadGithubCommandHandler(ILogger<UploadGithubCommandHandler> logger,
@@ -47,6 +51,7 @@ namespace LeagueOfItems.Application.Github.Commands
             _repository = configuration["Github:Repository"];
             _owner = configuration["Github:Owner"];
             _path = configuration["Github:Path"];
+            _fileName = configuration["Github:FileName"];
         }
 
         public async Task<Unit> Handle(UploadGithubCommand request, CancellationToken cancellationToken)
@@ -67,15 +72,21 @@ namespace LeagueOfItems.Application.Github.Commands
         {
             var updateFileRequest = new UpdateFileRequest("Update League of Items dataset", json, sha);
 
-            await _client.Repository.Content.UpdateFile(_owner, _repository, _path, updateFileRequest);
+            await _client.Repository.Content.UpdateFile(_owner, _repository, Path.Join(_path, _fileName),
+                updateFileRequest);
         }
 
         private async Task<string> GetDatasetJson()
         {
             _logger.LogInformation("Getting Dataset as JSON");
 
+            _logger.LogInformation("Getting all Items");
             var itemStats = await _mediator.Send(new GetAllItemsQuery());
+
+            _logger.LogInformation("Getting all Runes");
             var runeStats = await _mediator.Send(new GetAllRunesQuery());
+
+            _logger.LogInformation("Getting all Champions");
             var championStats = await _mediator.Send(new GetAllChampionsQuery());
             var version = await _mediator.Send(new GetUggVersionQuery());
 
@@ -94,9 +105,11 @@ namespace LeagueOfItems.Application.Github.Commands
         {
             var contents = await _client.Repository.Content.GetAllContents(_owner, _repository, _path);
 
-            _logger.LogInformation("Got Dataset Github SHA {Sha}", contents[0].Sha);
+            var content = contents.Single(c => c.Name == _fileName);
 
-            return contents[0].Sha;
+            _logger.LogInformation("Got Dataset Github SHA {Sha}", content.Sha);
+
+            return content.Sha;
         }
     }
 }

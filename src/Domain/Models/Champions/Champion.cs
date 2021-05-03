@@ -8,6 +8,17 @@ namespace LeagueOfItems.Domain.Models.Champions
 {
     public class Champion
     {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Title { get; set; }
+        public string Blurb { get; set; }
+
+        public string RiotId { get; set; }
+
+        [JsonIgnore] public List<ItemData> ItemData { get; set; }
+        [JsonIgnore] public List<RuneData> RuneData { get; set; }
+        [JsonIgnore] public List<ChampionData> ChampionData { get; set; }
+
         public Champion()
         {
         }
@@ -32,16 +43,5 @@ namespace LeagueOfItems.Domain.Models.Champions
         {
             Id = int.Parse(riotChampion.Key);
         }
-
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Title { get; set; }
-        public string Blurb { get; set; }
-
-        public string RiotId { get; set; }
-
-        [JsonIgnore] public List<ItemData> ItemData { get; set; }
-        [JsonIgnore] public List<RuneData> RuneData { get; set; }
-        [JsonIgnore] public List<ChampionData> ChampionData { get; set; }
     }
 }

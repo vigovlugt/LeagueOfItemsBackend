@@ -13,12 +13,7 @@ namespace LeagueOfItems.Domain.Models.Champions
         public List<ChampionRuneStats> RuneStats { get; set; }
         public List<ChampionItemStats> ItemStats { get; set; }
         public List<ChampionRoleStats> RoleStats { get; set; }
-
-        public ChampionStats(Champion champion) : base(champion)
-        {
-            Wins = ItemData.Sum(d => d.Wins);
-            Matches = ItemData.Sum(d => d.Matches);
-        }
+        public List<ChampionItemOrderStats> OrderStats { get; set; }
 
         public ChampionStats(Champion champion, List<ItemData> itemData, List<RuneData> runeData) : base(champion)
         {
@@ -50,6 +45,21 @@ namespace LeagueOfItems.Domain.Models.Champions
                 .Select(grouping => new ChampionRoleStats(grouping.Key, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();
+
+            OrderStats = Enumerable.Range(0, 5).Select(i =>
+            {
+                var data = ItemData.Where(d => d.Order == i).ToList();
+                var orderMatchesMinimum = data.Sum(d => d.Matches) * 0.005;
+
+                var championItemStats = data
+                    .GroupBy(d => d.ItemId)
+                    .Where(grouping => grouping.Sum(d => d.Matches) > orderMatchesMinimum / 5)
+                    .Select(grouping => new ChampionItemStats(grouping.Key, grouping.ToList()))
+                    .OrderByDescending(stats => stats.Matches)
+                    .ToList();
+
+                return new ChampionItemOrderStats(i, championItemStats);
+            }).ToList();
         }
     }
 }
