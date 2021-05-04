@@ -15,13 +15,10 @@ namespace LeagueOfItems.Domain.Models.Runes
             Wins = RuneData.Sum(d => d.Wins);
             Matches = RuneData.Sum(d => d.Matches);
 
-            // Minimum of .5 percent pickrate
-            var championMatchMinimum = Matches * 0.005;
-
             ChampionStats = RuneData
-                .GroupBy(c => c.ChampionId)
-                .Where(grouping => grouping.Sum(stats => stats.Matches) > championMatchMinimum)
-                .Select(grouping => new RuneChampionStats(grouping.Key, grouping.ToList()))
+                .GroupBy(c => c.Champion)
+                .Where(grouping => grouping.Sum(stats => stats.Matches) > grouping.Key.Matches * Constants.MatchMinimum)
+                .Select(grouping => new RuneChampionStats(grouping.Key.Id, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();
         }

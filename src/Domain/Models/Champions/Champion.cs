@@ -12,8 +12,12 @@ namespace LeagueOfItems.Domain.Models.Champions
         public string Name { get; set; }
         public string Title { get; set; }
         public string Blurb { get; set; }
+        public string Lore { get; set; }
 
         public string RiotId { get; set; }
+
+        public int Wins { get; set; }
+        public int Matches { get; set; }
 
         [JsonIgnore] public List<ItemData> ItemData { get; set; }
         [JsonIgnore] public List<RuneData> RuneData { get; set; }
@@ -23,23 +27,29 @@ namespace LeagueOfItems.Domain.Models.Champions
         {
         }
 
-        public Champion(int id, string name, string title, string blurb, string riotId, List<ChampionData> championData)
+        public Champion(int id, string name, string title, string blurb, string lore, string riotId,
+            List<ChampionData> championData,
+            int wins, int matches)
         {
             Id = id;
             Name = name;
             Title = title;
             Blurb = blurb;
+            Lore = lore;
             RiotId = riotId;
             ChampionData = championData;
+            Wins = wins;
+            Matches = matches;
         }
 
         public Champion(Champion champion) : this(champion.Id, champion.Name, champion.Title, champion.Blurb,
-            champion.RiotId, champion.ChampionData)
+            champion.Lore, champion.RiotId, champion.ChampionData, champion.Wins, champion.Matches)
         {
         }
 
         public Champion(RiotChampion riotChampion) : this(0, riotChampion.Name, riotChampion.Title, riotChampion.Blurb,
-            riotChampion.Id, null)
+            riotChampion.Lore,
+            riotChampion.Id, null, 0, 0)
         {
             Id = int.Parse(riotChampion.Key);
         }

@@ -26,9 +26,10 @@ namespace LeagueOfItems.Application.Items.Queries
         {
             var items = await _context.Items
                 .Include(i => i.ItemData)
+                .ThenInclude(i => i.Champion)
                 .Where(i => i.ItemData.Count != 0)
                 .OrderBy(i => i.Name)
-                .ToListAsync(cancellationToken: cancellationToken);
+                .ToListAsync(cancellationToken);
 
             var itemStats = items.Select(i => new ItemStats(i)).ToList();
 

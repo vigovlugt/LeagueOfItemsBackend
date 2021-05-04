@@ -3,6 +3,7 @@ using LeagueOfItems.Domain.Models.Champions;
 using LeagueOfItems.Domain.Models.Items;
 using LeagueOfItems.Domain.Models.Runes;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace LeagueOfItems.Application.Common.Interfaces
@@ -20,6 +21,8 @@ namespace LeagueOfItems.Application.Common.Interfaces
         DbSet<ChampionData> ChampionData { get; set; }
         
         DatabaseFacade Database { get; }
+
+        EntityEntry<TEntity> Entry<TEntity>(TEntity entity) where TEntity : class;
 
         Task<int> SaveChangesAsync();
     }

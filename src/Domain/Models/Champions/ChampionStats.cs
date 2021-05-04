@@ -7,9 +7,6 @@ namespace LeagueOfItems.Domain.Models.Champions
 {
     public class ChampionStats : Champion
     {
-        public int Wins { get; set; }
-        public int Matches { get; set; }
-
         public List<ChampionRuneStats> RuneStats { get; set; }
         public List<ChampionItemStats> ItemStats { get; set; }
         public List<ChampionRoleStats> RoleStats { get; set; }
@@ -20,28 +17,23 @@ namespace LeagueOfItems.Domain.Models.Champions
             RuneData = runeData;
             ItemData = itemData;
 
-            Wins = ChampionData.Sum(d => d.Wins);
-            Matches = ChampionData.Sum(d => d.Matches);
-
-            // Minimum of .5 procent pickrate
-            var itemMatchMinimum = ItemData.Sum(i => i.Matches) * 0.005;
-            var runeMatchMinimum = RuneData.Sum(i => i.Matches) * 0.005;
-            var roleMatchMinimum = ChampionData.Sum(c => c.Matches) * 0.005;
+            // When this champion is played, rune/item/role must be picked at least 0.5%.
+            var matchMinimum = Matches * Constants.MatchMinimum;
 
             ItemStats = ItemData.GroupBy(i => i.ItemId)
-                .Where(grouping => grouping.Sum(stats => stats.Matches) > itemMatchMinimum)
+                .Where(grouping => grouping.Sum(stats => stats.Matches) > matchMinimum)
                 .Select(grouping => new ChampionItemStats(grouping.Key, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();
 
             RuneStats = RuneData.GroupBy(r => r.RuneId)
-                .Where(grouping => grouping.Sum(stats => stats.Matches) > runeMatchMinimum)
+                .Where(grouping => grouping.Sum(stats => stats.Matches) > matchMinimum)
                 .Select(grouping => new ChampionRuneStats(grouping.Key, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();
 
             RoleStats = ChampionData.GroupBy(c => c.Role)
-                .Where(grouping => grouping.Sum(s => s.Matches) > roleMatchMinimum)
+                .Where(grouping => grouping.Sum(s => s.Matches) > matchMinimum)
                 .Select(grouping => new ChampionRoleStats(grouping.Key, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();

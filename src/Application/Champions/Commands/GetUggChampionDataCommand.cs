@@ -44,6 +44,7 @@ namespace LeagueOfItems.Application.Champions.Commands
             var championData = championDataTasks.SelectMany(x => x.Result).ToList();
 
             await SaveChampionData(championData);
+            await SaveMatchAndWinsOnChampion(championData);
 
             return Unit.Value;
         }
@@ -77,6 +78,25 @@ namespace LeagueOfItems.Application.Champions.Commands
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{ChampionDataAmount} ChampionData rows saved", championData.Count);
+        }
+
+        private async Task SaveMatchAndWinsOnChampion(List<ChampionData> championData)
+        {
+            var championDataGroups = championData.GroupBy(c => c.ChampionId);
+
+            var champions = _context.Champions.ToList();
+
+            foreach (var championDataGroup in championDataGroups)
+            {
+                var champion = champions.Single(c => c.Id == championDataGroup.Key);
+
+                champion.Matches = championDataGroup.Sum(c => c.Matches);
+                champion.Wins = championDataGroup.Sum(c => c.Wins);
+            }
+
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Wins and Matches saved on champions");
         }
     }
 }

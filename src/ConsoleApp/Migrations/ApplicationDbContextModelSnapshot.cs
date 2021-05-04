@@ -2,6 +2,7 @@
 using LeagueOfItems.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace LeagueOfItems.ConsoleApp.Migrations
 {
@@ -23,6 +24,12 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Property<string>("Blurb")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Lore")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Matches")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
@@ -31,6 +38,9 @@ namespace LeagueOfItems.ConsoleApp.Migrations
 
                     b.Property<string>("Title")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Wins")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -88,49 +98,7 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.Rune", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("LongDescription")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("RunePathId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ShortDescription")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Tier")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RunePathId");
-
-                    b.ToTable("Runes");
-                });
-
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.RunePath", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RunePaths");
-                });
-
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.ItemData", b =>
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.Items.ItemData", b =>
                 {
                     b.Property<int>("ItemId")
                         .HasColumnType("INTEGER");
@@ -163,7 +131,35 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.ToTable("ItemData");
                 });
 
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.RuneData", b =>
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.Rune", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LongDescription")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RunePathId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ShortDescription")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunePathId");
+
+                    b.ToTable("Runes");
+                });
+
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.RuneData", b =>
                 {
                     b.Property<int>("RuneId")
                         .HasColumnType("INTEGER");
@@ -196,49 +192,18 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.ToTable("RuneData");
                 });
 
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.StarterSetData", b =>
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.RunePath", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ChampionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Matches")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Rank")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Region")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Wins")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("StarterSetData");
-                });
-
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.UggStarterSetItem", b =>
-                {
-                    b.Property<int>("StarterSetId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("StarterSetId", "ItemId");
-
-                    b.ToTable("UggStarterSetItem");
+                    b.ToTable("RunePaths");
                 });
 
             modelBuilder.Entity("LeagueOfItems.Domain.Models.Champions.ChampionData", b =>
@@ -252,18 +217,7 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Navigation("Champion");
                 });
 
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.Rune", b =>
-                {
-                    b.HasOne("LeagueOfItems.Domain.Models.Runes.RunePath", "RunePath")
-                        .WithMany("Runes")
-                        .HasForeignKey("RunePathId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RunePath");
-                });
-
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.ItemData", b =>
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.Items.ItemData", b =>
                 {
                     b.HasOne("LeagueOfItems.Domain.Models.Champions.Champion", "Champion")
                         .WithMany("ItemData")
@@ -282,7 +236,18 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.RuneData", b =>
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.Rune", b =>
+                {
+                    b.HasOne("LeagueOfItems.Domain.Models.Runes.RunePath", "RunePath")
+                        .WithMany("Runes")
+                        .HasForeignKey("RunePathId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RunePath");
+                });
+
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.RuneData", b =>
                 {
                     b.HasOne("LeagueOfItems.Domain.Models.Champions.Champion", "Champion")
                         .WithMany("RuneData")
@@ -299,17 +264,6 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Navigation("Champion");
 
                     b.Navigation("Rune");
-                });
-
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.UggStarterSetItem", b =>
-                {
-                    b.HasOne("LeagueOfItems.Domain.Models.Ugg.StarterSetData", "StarterSet")
-                        .WithMany("Items")
-                        .HasForeignKey("StarterSetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("StarterSet");
                 });
 
             modelBuilder.Entity("LeagueOfItems.Domain.Models.Champions.Champion", b =>
@@ -334,11 +288,6 @@ namespace LeagueOfItems.ConsoleApp.Migrations
             modelBuilder.Entity("LeagueOfItems.Domain.Models.Runes.RunePath", b =>
                 {
                     b.Navigation("Runes");
-                });
-
-            modelBuilder.Entity("LeagueOfItems.Domain.Models.Ugg.StarterSetData", b =>
-                {
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

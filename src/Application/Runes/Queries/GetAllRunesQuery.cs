@@ -27,6 +27,7 @@ namespace LeagueOfItems.Application.Runes.Queries
             var items = await _context.Runes
                 .Include(r => r.RunePath)
                 .Include(i => i.RuneData)
+                .ThenInclude(i => i.Champion)
                 .Where(i => i.RuneData.Count != 0)
                 .OrderBy(i => i.Name)
                 .ToListAsync(cancellationToken);

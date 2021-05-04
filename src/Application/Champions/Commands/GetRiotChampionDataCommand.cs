@@ -39,9 +39,16 @@ namespace LeagueOfItems.Application.Champions.Commands
 
         public async Task<Unit> Handle(GetRiotChampionDataCommand request, CancellationToken cancellationToken)
         {
-            var championResponse = await GetRiotChampionResponse(request.Version);
+            var championResponse = await GetAllRiotChampionsResponse(request.Version);
 
-            var champions = ParseRiotChampions(championResponse);
+            var riotChampionTasks =
+                championResponse.Select((c) => GetRiotChampionResponse(request.Version, c.Id)).ToList();
+
+            await Task.WhenAll(riotChampionTasks);
+
+            var riotChampions = riotChampionTasks.Select(x => x.Result).ToList();
+
+            var champions = ParseRiotChampions(riotChampions);
 
             _logger.LogInformation("{ChampionAmount} champions found", champions.Count);
 
@@ -50,7 +57,7 @@ namespace LeagueOfItems.Application.Champions.Commands
             return Unit.Value;
         }
 
-        private async Task<List<RiotChampion>> GetRiotChampionResponse(string version)
+        private async Task<List<RiotChampion>> GetAllRiotChampionsResponse(string version)
         {
             var responseStream = await _mediator.Send(new GetRiotApiResponse
             {
@@ -65,6 +72,25 @@ namespace LeagueOfItems.Application.Champions.Commands
             if (championResponse == null) throw new ArgumentException("LOL champions endpoint returned null");
 
             return championResponse.Data.Values.ToList();
+        }
+
+        private async Task<RiotChampion> GetRiotChampionResponse(string version, string riotId)
+        {
+            _logger.LogInformation("Downloading Riot champion data for {RiotId}", riotId);
+
+            var responseStream = await _mediator.Send(new GetRiotApiResponse
+            {
+                Url = $"cdn/{version}/data/en_US/champion/{riotId}.json"
+            });
+
+            var championResponse = await JsonSerializer.DeserializeAsync<RiotChampionResponse>(responseStream,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            if (championResponse == null) throw new ArgumentException("LOL champions endpoint returned null");
+
+            return championResponse.Data.Values.Single();
         }
 
         private async Task SaveChampions(List<Champion> champions)

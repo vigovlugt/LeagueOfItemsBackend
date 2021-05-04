@@ -10,6 +10,7 @@ namespace LeagueOfItems.Domain.Models.Riot
         public string Name { get; set; }
         public string Title { get; set; }
         public string Blurb { get; set; }
+        public string Lore { get; set; }
         public ChampionInfo Info { get; set; }
         public ChampionImage Image { get; set; }
         public List<string> Tags { get; set; }

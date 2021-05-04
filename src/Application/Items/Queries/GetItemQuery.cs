@@ -14,6 +14,7 @@ namespace LeagueOfItems.Application.Items.Queries
         {
             Id = id;
         }
+
         public int Id { get; init; }
     }
 
@@ -30,6 +31,7 @@ namespace LeagueOfItems.Application.Items.Queries
         {
             var item = await _context.Items
                 .Include(i => i.ItemData)
+                .ThenInclude(i => i.Champion)
                 .Where(i => i.ItemData.Count != 0)
                 .SingleAsync(i => i.Id == request.Id, cancellationToken);
 
