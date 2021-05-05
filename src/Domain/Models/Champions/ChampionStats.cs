@@ -41,11 +41,11 @@ namespace LeagueOfItems.Domain.Models.Champions
             OrderStats = Enumerable.Range(0, 5).Select(i =>
             {
                 var data = ItemData.Where(d => d.Order == i).ToList();
-                var orderMatchesMinimum = data.Sum(d => d.Matches) * 0.005;
+                var orderMatchesMinimum = data.Sum(d => d.Matches) * Constants.MatchMinimum;
 
                 var championItemStats = data
                     .GroupBy(d => d.ItemId)
-                    .Where(grouping => grouping.Sum(d => d.Matches) > orderMatchesMinimum / 5)
+                    .Where(grouping => grouping.Sum(d => d.Matches) > orderMatchesMinimum)
                     .Select(grouping => new ChampionItemStats(grouping.Key, grouping.ToList()))
                     .OrderByDescending(stats => stats.Matches)
                     .ToList();
