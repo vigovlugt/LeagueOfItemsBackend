@@ -6,6 +6,7 @@
         public Region Region { get; set; }
         public Rank Rank { get; set; }
         public Role Role { get; set; }
+        public string Patch { get; set; }
 
         public int Wins { get; set; }
         public int Matches { get; set; }

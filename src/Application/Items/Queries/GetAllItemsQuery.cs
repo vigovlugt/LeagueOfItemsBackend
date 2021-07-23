@@ -11,6 +11,12 @@ namespace LeagueOfItems.Application.Items.Queries
 {
     public record GetAllItemsQuery : IRequest<List<ItemStats>>
     {
+        public string Patch { get; init; }
+
+        public GetAllItemsQuery(string patch)
+        {
+            Patch = patch;
+        }
     }
 
     public class GetAllItemsQueryHandler : IRequestHandler<GetAllItemsQuery, List<ItemStats>>
@@ -25,10 +31,11 @@ namespace LeagueOfItems.Application.Items.Queries
         public async Task<List<ItemStats>> Handle(GetAllItemsQuery request, CancellationToken cancellationToken)
         {
             var items = await _context.Items
-                .Include(i => i.ItemData)
-                .ThenInclude(i => i.Champion)
+                .Include(i => i.ItemData.Where(d => d.Patch == request.Patch))
+                .ThenInclude(i => i.Champion).ThenInclude(c => c.ChampionData.Where(d => d.Patch == request.Patch))
                 .Where(i => i.ItemData.Count != 0)
                 .OrderBy(i => i.Name)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
             var itemStats = items.Select(i => new ItemStats(i)).ToList();

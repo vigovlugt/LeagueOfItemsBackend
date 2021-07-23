@@ -61,13 +61,16 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Patch")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Matches")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Wins")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("ChampionId", "Rank", "Region", "Role");
+                    b.HasKey("ChampionId", "Rank", "Region", "Role", "Patch");
 
                     b.ToTable("ChampionData");
                 });
@@ -118,13 +121,16 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Patch")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Matches")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Wins")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("ItemId", "ChampionId", "Rank", "Order", "Region", "Role");
+                    b.HasKey("ItemId", "ChampionId", "Rank", "Order", "Region", "Role", "Patch");
 
                     b.HasIndex("ChampionId");
 
@@ -179,13 +185,16 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Patch")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Matches")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Wins")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("RuneId", "ChampionId", "Rank", "Tier", "Region", "Role");
+                    b.HasKey("RuneId", "ChampionId", "Rank", "Tier", "Region", "Role", "Patch");
 
                     b.HasIndex("ChampionId");
 

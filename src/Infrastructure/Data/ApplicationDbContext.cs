@@ -57,13 +57,13 @@ namespace LeagueOfItems.Infrastructure.Data
                 .IsRequired();
 
             modelBuilder.Entity<ItemData>()
-                .HasKey(i => new {i.ItemId, i.ChampionId, i.Rank, i.Order, i.Region, i.Role});
+                .HasKey(i => new {i.ItemId, i.ChampionId, i.Rank, i.Order, i.Region, i.Role, i.Patch});
 
             modelBuilder.Entity<RuneData>()
-                .HasKey(i => new {i.RuneId, i.ChampionId, i.Rank, i.Tier, i.Region, i.Role});
+                .HasKey(i => new {i.RuneId, i.ChampionId, i.Rank, i.Tier, i.Region, i.Role, i.Patch});
 
             modelBuilder.Entity<ChampionData>()
-                .HasKey(i => new {i.ChampionId, i.Rank, i.Region, i.Role});
+                .HasKey(i => new {i.ChampionId, i.Rank, i.Region, i.Role, i.Patch});
         }
     }
 }

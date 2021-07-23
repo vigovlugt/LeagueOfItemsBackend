@@ -16,6 +16,12 @@ namespace LeagueOfItems.Application.Runes.Commands
 {
     public record GetUggRuneDataCommand : IRequest
     {
+        public string Version { get; set; }
+
+        public GetUggRuneDataCommand(string version)
+        {
+            Version = version;
+        }
     }
 
     public class GetUggRuneDataCommandHandler : IRequestHandler<GetUggRuneDataCommand>
@@ -35,9 +41,9 @@ namespace LeagueOfItems.Application.Runes.Commands
         public async Task<Unit> Handle(GetUggRuneDataCommand request, CancellationToken cancellationToken)
         {
             var champions = await _context.Champions.ToListAsync(cancellationToken);
-            var version = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
 
-            var runeDataLists = champions.Select(champion => GetRuneDataForChampion(version, champion)).ToList();
+            var runeDataLists = champions.Select(champion => GetRuneDataForChampion(request.Version, champion))
+                .ToList();
 
             await Task.WhenAll(runeDataLists);
 
@@ -50,7 +56,7 @@ namespace LeagueOfItems.Application.Runes.Commands
 
         private async Task<List<RuneData>> GetRuneDataForChampion(string version, Champion champion)
         {
-            _logger.LogInformation("Downloading Rune data for {Champion}", champion.Name);
+            _logger.LogInformation("Downloading Rune data for {Champion} Version: {Version}", champion.Name, version);
 
             await using var responseStream = await _mediator.Send(new GetUggApiResponse
             {
@@ -58,9 +64,15 @@ namespace LeagueOfItems.Application.Runes.Commands
                 Type = "runes",
                 Version = version
             });
+            
+            if (responseStream == null)
+            {
+                _logger.LogWarning("No Ugg response for RuneData for Champion {Champion}", champion.Name);
+                return new List<RuneData>();
+            }
 
 
-            var parsedItemData = await UggRuneDataParser.Parse(champion.Id, responseStream);
+            var parsedItemData = await UggRuneDataParser.Parse(champion.Id, responseStream, version);
 
             var filteredItemData = UggDataFilterer.Filter(parsedItemData);
 
@@ -69,8 +81,6 @@ namespace LeagueOfItems.Application.Runes.Commands
 
         private async Task SaveRuneData(List<RuneData> runeData)
         {
-            await _mediator.Send(new DeleteAllRuneDataCommand());
-
             _context.RuneData.AddRange(runeData);
 
             await _context.SaveChangesAsync();

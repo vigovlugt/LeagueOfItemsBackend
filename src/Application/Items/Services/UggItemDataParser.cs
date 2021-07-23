@@ -13,7 +13,8 @@ namespace LeagueOfItems.Application.Items.Services
     {
         public static async Task<List<ItemData>> Parse(
             int championId,
-            Stream stream)
+            Stream stream,
+            string version)
         {
             var parsed = await UggResponseParser.Parse<List<List<JsonElement>>, List<ItemData>>(stream,
                 (region, rank, role, data) =>
@@ -41,7 +42,8 @@ namespace LeagueOfItems.Application.Items.Services
                             Order = order,
                             Rank = rank,
                             Region = region,
-                            Role = role
+                            Role = role,
+                            Patch = version
                         }));
                     }
 

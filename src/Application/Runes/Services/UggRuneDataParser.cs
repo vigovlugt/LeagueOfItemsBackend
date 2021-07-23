@@ -12,7 +12,8 @@ namespace LeagueOfItems.Application.Runes.Services
     {
         public static async Task<List<RuneData>> Parse(
             int championId,
-            Stream stream)
+            Stream stream,
+            string version)
         {
             var parsed = await UggResponseParser.Parse<List<Dictionary<int, List<int>>>, List<RuneData>>(stream,
                 (region, rank, role, data) =>
@@ -28,7 +29,8 @@ namespace LeagueOfItems.Application.Runes.Services
                         RuneId = uggSimpleRune.RuneId,
                         Matches = uggSimpleRune.Matches,
                         Wins = uggSimpleRune.Wins,
-                        Tier = uggSimpleRune.Tier
+                        Tier = uggSimpleRune.Tier,
+                        Patch = version
                     }).ToList();
                 });
 

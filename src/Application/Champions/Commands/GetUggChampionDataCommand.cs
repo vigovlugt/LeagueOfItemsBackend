@@ -15,6 +15,12 @@ namespace LeagueOfItems.Application.Champions.Commands
 {
     public record GetUggChampionDataCommand : IRequest
     {
+        public string Version { get; init; }
+
+        public GetUggChampionDataCommand(string version)
+        {
+            Version = version;
+        }
     }
 
     public class GetUggChampionDataCommandHandler : IRequestHandler<GetUggChampionDataCommand>
@@ -35,9 +41,9 @@ namespace LeagueOfItems.Application.Champions.Commands
         public async Task<Unit> Handle(GetUggChampionDataCommand request, CancellationToken cancellationToken)
         {
             var champions = await _context.Champions.ToListAsync(cancellationToken);
-            var version = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
 
-            var championDataTasks = champions.Select(champion => GetDataForChampion(version, champion)).ToList();
+            var championDataTasks =
+                champions.Select(champion => GetDataForChampion(request.Version, champion)).ToList();
 
             await Task.WhenAll(championDataTasks);
 
@@ -51,7 +57,8 @@ namespace LeagueOfItems.Application.Champions.Commands
 
         private async Task<List<ChampionData>> GetDataForChampion(string version, Champion champion)
         {
-            _logger.LogInformation("Downloading Champion data for {Champion}", champion.Name);
+            _logger.LogInformation("Downloading Champion data for {Champion} Version: {Version}", champion.Name,
+                version);
 
             await using var responseStream = await _mediator.Send(new GetUggApiResponse
             {
@@ -61,7 +68,13 @@ namespace LeagueOfItems.Application.Champions.Commands
                 Table = false
             });
 
-            var parsedChampionData = await UggChampionDataParser.Parse(champion.Id, responseStream);
+            if (responseStream == null)
+            {
+                _logger.LogWarning("No Ugg response for ChampionData for Champion {Champion}", champion.Name);
+                return new List<ChampionData>();
+            }
+
+            var parsedChampionData = await UggChampionDataParser.Parse(champion.Id, responseStream, version);
 
             var filteredChampionData = UggDataFilterer.Filter(parsedChampionData);
 
@@ -71,8 +84,6 @@ namespace LeagueOfItems.Application.Champions.Commands
 
         private async Task SaveChampionData(List<ChampionData> championData)
         {
-            await _mediator.Send(new DeleteAllChampionDataCommand());
-
             _context.ChampionData.AddRange(championData);
 
             await _context.SaveChangesAsync();
@@ -90,12 +101,12 @@ namespace LeagueOfItems.Application.Champions.Commands
             {
                 var champion = champions.Single(c => c.Id == championDataGroup.Key);
 
-                champion.Matches = championDataGroup.Sum(c => c.Matches);
-                champion.Wins = championDataGroup.Sum(c => c.Wins);
+                // champion.Matches = championDataGroup.Sum(c => c.Matches);
+                // champion.Wins = championDataGroup.Sum(c => c.Wins);
             }
 
             await _context.SaveChangesAsync();
-            
+
             _logger.LogInformation("Wins and Matches saved on champions");
         }
     }

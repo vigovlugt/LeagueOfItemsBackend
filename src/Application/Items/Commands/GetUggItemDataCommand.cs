@@ -16,6 +16,13 @@ namespace LeagueOfItems.Application.Items.Commands
 {
     public record GetUggItemDataCommand : IRequest
     {
+        public string Version { get; init; }
+
+
+        public GetUggItemDataCommand(string version)
+        {
+            Version = version;
+        }
     }
 
     public class GetUggItemDataCommandHandler : IRequestHandler<GetUggItemDataCommand>
@@ -35,9 +42,9 @@ namespace LeagueOfItems.Application.Items.Commands
         public async Task<Unit> Handle(GetUggItemDataCommand request, CancellationToken cancellationToken)
         {
             var champions = await _context.Champions.ToListAsync(cancellationToken);
-            var version = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
 
-            var itemDataLists = champions.Select(champion => GetItemDataForChampion(version, champion)).ToList();
+            var itemDataLists = champions.Select(champion => GetItemDataForChampion(request.Version, champion))
+                .ToList();
 
             await Task.WhenAll(itemDataLists);
 
@@ -50,7 +57,7 @@ namespace LeagueOfItems.Application.Items.Commands
 
         private async Task<List<ItemData>> GetItemDataForChampion(string version, Champion champion)
         {
-            _logger.LogInformation("Downloading Item data for {Champion}", champion.Name);
+            _logger.LogInformation("Downloading Item data for {Champion} Version: {Version}", champion.Name, version);
 
             await using var responseStream = await _mediator.Send(new GetUggApiResponse
             {
@@ -59,7 +66,13 @@ namespace LeagueOfItems.Application.Items.Commands
                 Version = version
             });
 
-            var parsedItemData = await UggItemDataParser.Parse(champion.Id, responseStream);
+            if (responseStream == null)
+            {
+                _logger.LogWarning("No Ugg response for ItemData for Champion {Champion}", champion.Name);
+                return new List<ItemData>();
+            }
+
+            var parsedItemData = await UggItemDataParser.Parse(champion.Id, responseStream, version);
 
             var filteredItemData = UggDataFilterer.Filter(parsedItemData);
 
@@ -68,8 +81,6 @@ namespace LeagueOfItems.Application.Items.Commands
 
         private async Task SaveItemData(List<ItemData> itemData)
         {
-            await _mediator.Send(new DeleteAllItemDataCommand());
-
             _context.ItemData.AddRange(itemData);
 
             await _context.SaveChangesAsync();

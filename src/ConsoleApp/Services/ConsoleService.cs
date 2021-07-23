@@ -9,6 +9,8 @@ using LeagueOfItems.Application.Items.Commands;
 using LeagueOfItems.Application.Items.Queries;
 using LeagueOfItems.Application.Riot.Queries;
 using LeagueOfItems.Application.Runes.Commands;
+using LeagueOfItems.Application.Ugg.Helpers;
+using LeagueOfItems.Application.Ugg.Queries;
 using MediatR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -52,9 +54,23 @@ namespace LeagueOfItems.ConsoleApp.Services
 
                         break;
                     case "ugg":
-                        await _mediator.Send(new GetUggChampionDataCommand(), cancellationToken);
-                        await _mediator.Send(new GetUggItemDataCommand(), cancellationToken);
-                        await _mediator.Send(new GetUggRuneDataCommand(), cancellationToken);
+                        await _mediator.Send(new DeleteAllRuneDataCommand());
+                        await _mediator.Send(new DeleteAllItemDataCommand());
+                        await _mediator.Send(new DeleteAllChampionDataCommand());
+
+                        
+                        var uggVersion = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
+                        
+                        await _mediator.Send(new GetUggChampionDataCommand(uggVersion), cancellationToken);
+                        await _mediator.Send(new GetUggItemDataCommand(uggVersion), cancellationToken);
+                        await _mediator.Send(new GetUggRuneDataCommand(uggVersion), cancellationToken);
+                        
+                        _logger.LogInformation("Downloading info for previous UGG Patch");
+
+                        var previousVersion = UggVersionHelper.GetPreviousVersion(uggVersion);
+                        await _mediator.Send(new GetUggChampionDataCommand(previousVersion), cancellationToken);
+                        await _mediator.Send(new GetUggItemDataCommand(previousVersion), cancellationToken);
+                        await _mediator.Send(new GetUggRuneDataCommand(previousVersion), cancellationToken);
 
                         break;
                     case "github":

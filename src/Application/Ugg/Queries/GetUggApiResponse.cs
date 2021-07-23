@@ -37,7 +37,10 @@ namespace LeagueOfItems.Application.Ugg.Queries
 
             var response = await _client.GetAsync(requestUri, cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
 
             return await response.Content.ReadAsStreamAsync(cancellationToken);
         }

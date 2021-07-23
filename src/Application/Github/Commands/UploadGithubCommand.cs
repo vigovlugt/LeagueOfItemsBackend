@@ -3,11 +3,14 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using LeagueOfItems.Application.Builds;
 using LeagueOfItems.Application.Champions.Queries;
 using LeagueOfItems.Application.Items.Queries;
 using LeagueOfItems.Application.Runes.Queries;
+using LeagueOfItems.Application.Ugg.Helpers;
 using LeagueOfItems.Application.Ugg.Queries;
 using LeagueOfItems.Domain.Models;
+using LeagueOfItems.Domain.Models.Dataset;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -79,23 +82,29 @@ namespace LeagueOfItems.Application.Github.Commands
         private async Task<string> GetDatasetJson()
         {
             _logger.LogInformation("Getting Dataset as JSON");
+            var patch = await _mediator.Send(new GetUggVersionQuery());
+            var previousPatch = UggVersionHelper.GetPreviousVersion(patch);
 
             _logger.LogInformation("Getting all Items");
-            var itemStats = await _mediator.Send(new GetAllItemsQuery());
+            var itemStats = await _mediator.Send(new GetAllItemsQuery(patch));
 
             _logger.LogInformation("Getting all Runes");
-            var runeStats = await _mediator.Send(new GetAllRunesQuery());
+            var runeStats = await _mediator.Send(new GetAllRunesQuery(patch));
 
             _logger.LogInformation("Getting all Champions");
-            var championStats = await _mediator.Send(new GetAllChampionsQuery());
-            var version = await _mediator.Send(new GetUggVersionQuery());
+            var championStats = await _mediator.Send(new GetAllChampionsQuery(patch));
+            var previousChampionStats = await _mediator.Send(new GetAllChampionsQuery(previousPatch));
 
-            var dataset = new ItemRuneDataset
+            var buildStats = BuildAnalyzer.GetNewBuilds(championStats, previousChampionStats);
+            // var buildsDataset = BuildAnalyzer.CreateBuildDataset(buildStats);
+
+            var dataset = new Dataset
             {
                 Items = itemStats,
                 Runes = runeStats,
                 Champions = championStats,
-                Version = version
+                Version = patch,
+                Builds = buildStats
             };
 
             return JsonSerializer.Serialize(dataset, _jsonSerializerOptions);

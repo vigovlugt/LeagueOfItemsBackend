@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using LeagueOfItems.Domain.Models.Common;
 using LeagueOfItems.Domain.Models.Items;
 
 namespace LeagueOfItems.Domain.Models.Champions
 {
-    public class ChampionItemOrderStats
+    public class ChampionItemOrderStats : IStats
     {
         public int Order { get; set; }
 

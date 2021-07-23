@@ -11,6 +11,12 @@ namespace LeagueOfItems.Application.Runes.Queries
 {
     public record GetAllRunesQuery : IRequest<List<RuneStats>>
     {
+        public string Patch { get; init; }
+
+        public GetAllRunesQuery(string patch)
+        {
+            Patch = patch;
+        }
     }
 
     public class GetAllRunesQueryHandler : IRequestHandler<GetAllRunesQuery, List<RuneStats>>
@@ -26,10 +32,11 @@ namespace LeagueOfItems.Application.Runes.Queries
         {
             var items = await _context.Runes
                 .Include(r => r.RunePath)
-                .Include(i => i.RuneData)
-                .ThenInclude(i => i.Champion)
+                .Include(i => i.RuneData.Where(d => d.Patch == request.Patch))
+                .ThenInclude(i => i.Champion).ThenInclude(c => c.ChampionData.Where(d => d.Patch == request.Patch))
                 .Where(i => i.RuneData.Count != 0)
                 .OrderBy(i => i.Name)
+                .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
             var runeStats = items.Select(r => new RuneStats(r)).ToList();

@@ -1,12 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using LeagueOfItems.Domain.Models.Common;
 using LeagueOfItems.Domain.Models.Items;
 using LeagueOfItems.Domain.Models.Runes;
 
 namespace LeagueOfItems.Domain.Models.Champions
 {
-    public class ChampionStats : Champion
+    public class ChampionStats : Champion, IStats
     {
+        public int Wins { get; set; }
+        public int Matches { get; set; }
+
         public List<ChampionRuneStats> RuneStats { get; set; }
         public List<ChampionItemStats> ItemStats { get; set; }
         public List<ChampionRoleStats> RoleStats { get; set; }
@@ -14,21 +19,24 @@ namespace LeagueOfItems.Domain.Models.Champions
 
         public ChampionStats(Champion champion, List<ItemData> itemData, List<RuneData> runeData) : base(champion)
         {
+            Wins = ChampionData.Sum(i => i.Wins);
+            Matches = ChampionData.Sum(i => i.Matches);
+
             RuneData = runeData;
             ItemData = itemData;
 
             // When this champion is played, rune/item/role must be picked at least 0.5%.
-            var matchMinimum = Matches * Constants.MatchMinimum;
+            var matchMinimum = Math.Max(Matches * Constants.MatchMinimumRelative, Constants.MinimumMatches);
 
             ItemStats = ItemData.GroupBy(i => i.ItemId)
                 .Where(grouping => grouping.Sum(stats => stats.Matches) > matchMinimum)
-                .Select(grouping => new ChampionItemStats(grouping.Key, grouping.ToList()))
+                .Select(grouping => new ChampionItemStats(champion.Id, grouping.Key, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();
 
             RuneStats = RuneData.GroupBy(r => r.RuneId)
                 .Where(grouping => grouping.Sum(stats => stats.Matches) > matchMinimum)
-                .Select(grouping => new ChampionRuneStats(grouping.Key, grouping.ToList()))
+                .Select(grouping => new ChampionRuneStats(champion.Id, grouping.Key, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();
 
@@ -41,12 +49,13 @@ namespace LeagueOfItems.Domain.Models.Champions
             OrderStats = Enumerable.Range(0, 5).Select(i =>
             {
                 var data = ItemData.Where(d => d.Order == i).ToList();
-                var orderMatchesMinimum = data.Sum(d => d.Matches) * Constants.MatchMinimum;
+                var orderMatchesMinimum = Math.Max(data.Sum(d => d.Matches) * Constants.MatchMinimumRelative,
+                    Constants.MinimumMatches);
 
                 var championItemStats = data
                     .GroupBy(d => d.ItemId)
                     .Where(grouping => grouping.Sum(d => d.Matches) > orderMatchesMinimum)
-                    .Select(grouping => new ChampionItemStats(grouping.Key, grouping.ToList()))
+                    .Select(grouping => new ChampionItemStats(champion.Id, grouping.Key, grouping.ToList()))
                     .OrderByDescending(stats => stats.Matches)
                     .ToList();
 

@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LeagueOfItems.Domain.Models.Champions;
+using LeagueOfItems.Domain.Models.Common;
 
 namespace LeagueOfItems.Domain.Models.Runes
 {
-    public class RuneStats : Rune
+    public class RuneStats : Rune, IStats
     {
         public int Wins { get; set; }
         public int Matches { get; set; }
@@ -17,8 +19,9 @@ namespace LeagueOfItems.Domain.Models.Runes
 
             ChampionStats = RuneData
                 .GroupBy(c => c.Champion)
-                .Where(grouping => grouping.Sum(stats => stats.Matches) > grouping.Key.Matches * Constants.MatchMinimum)
-                .Select(grouping => new RuneChampionStats(grouping.Key.Id, grouping.ToList()))
+                .Where(grouping => grouping.Sum(stats => stats.Matches) > Math.Max(
+                    grouping.Key.ChampionData.Sum(c => c.Matches) * Constants.MatchMinimumRelative, Constants.MinimumMatches))
+                .Select(grouping => new RuneChampionStats(rune.Id, grouping.Key.Id, grouping.ToList()))
                 .OrderByDescending(stats => stats.Matches)
                 .ToList();
         }
