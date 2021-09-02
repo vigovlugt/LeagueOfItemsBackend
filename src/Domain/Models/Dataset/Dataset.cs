@@ -15,6 +15,10 @@ namespace LeagueOfItems.Domain.Models.Dataset
         
         public List<BuildStats> Builds { get; set; }
         
+        public int ChampionMatches { get; set; }
+        
+        public int PreviousChampionMatches { get; set; }
+        
         public DateTime Date { get; set; } = DateTime.Now;
         public string Version { get; set; }
     }

@@ -12,6 +12,9 @@ namespace LeagueOfItems.Domain.Models.Champions
         public int Wins { get; set; }
         public int Matches { get; set; }
 
+        public int PreviousWins { get; set; }
+        public int PreviousMatches { get; set; }
+
         public List<ChampionRuneStats> RuneStats { get; set; }
         public List<ChampionItemStats> ItemStats { get; set; }
         public List<ChampionRoleStats> RoleStats { get; set; }

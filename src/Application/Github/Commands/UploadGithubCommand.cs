@@ -104,7 +104,9 @@ namespace LeagueOfItems.Application.Github.Commands
                 Runes = runeStats,
                 Champions = championStats,
                 Version = patch,
-                Builds = buildStats
+                Builds = buildStats,
+                ChampionMatches = championStats.Sum(s => s.Matches),
+                PreviousChampionMatches = previousChampionStats.Sum(s => s.Matches),
             };
 
             return JsonSerializer.Serialize(dataset, _jsonSerializerOptions);
