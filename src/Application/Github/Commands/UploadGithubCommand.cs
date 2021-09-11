@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Builds;
 using LeagueOfItems.Application.Champions.Queries;
+using LeagueOfItems.Application.Champions.Services;
 using LeagueOfItems.Application.Items.Queries;
 using LeagueOfItems.Application.Runes.Queries;
 using LeagueOfItems.Application.Ugg.Helpers;
@@ -94,6 +95,7 @@ namespace LeagueOfItems.Application.Github.Commands
             _logger.LogInformation("Getting all Champions");
             var championStats = await _mediator.Send(new GetAllChampionsQuery(patch));
             var previousChampionStats = await _mediator.Send(new GetAllChampionsQuery(previousPatch));
+            PreviousChampionStats.SetPreviousChampionStats(championStats, previousChampionStats);
 
             var buildStats = BuildAnalyzer.GetNewBuilds(championStats, previousChampionStats);
             // var buildsDataset = BuildAnalyzer.CreateBuildDataset(buildStats);

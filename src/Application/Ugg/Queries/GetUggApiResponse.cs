@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Ugg.Queries
 {
@@ -20,9 +21,11 @@ namespace LeagueOfItems.Application.Ugg.Queries
     public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Stream>
     {
         private readonly HttpClient _client;
+        private readonly ILogger<GetUggApiResponseHandler> _logger;
 
-        public GetUggApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration)
+        public GetUggApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration, ILogger<GetUggApiResponseHandler> logger)
         {
+            _logger = logger;
             _client = clientFactory.CreateClient();
             _client.BaseAddress = new Uri(configuration["Ugg:ApiUrl"]);
         }
@@ -33,12 +36,13 @@ namespace LeagueOfItems.Application.Ugg.Queries
 
             var prefix = request.Table ? "table/" : "";
             var requestUri =
-                $"lol/1.1/{prefix}{request.Type}/{uggVersion}/ranked_solo_5x5/{request.ChampionId}/1.4.0.json";
+                $"lol/1.1/{prefix}{request.Type}/{uggVersion}/ranked_solo_5x5/{request.ChampionId}/1.5.0.json";
 
             var response = await _client.GetAsync(requestUri, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
+                _logger.LogWarning("Could not resolve Ugg request: {Url}", _client.BaseAddress + requestUri);
                 return null;
             }
 
