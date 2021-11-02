@@ -60,6 +60,11 @@ namespace LeagueOfItems.ConsoleApp.Services
 
                         
                         var uggVersion = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
+                        if (string.IsNullOrEmpty(uggVersion))
+                        {
+                            _logger.LogCritical("UGG version not found");
+                            return;
+                        }
                         
                         await _mediator.Send(new GetUggChampionDataCommand(uggVersion), cancellationToken);
                         await _mediator.Send(new GetUggItemDataCommand(uggVersion), cancellationToken);
