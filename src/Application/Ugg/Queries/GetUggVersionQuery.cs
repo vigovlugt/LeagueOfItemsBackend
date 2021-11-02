@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +18,7 @@ namespace LeagueOfItems.Application.Ugg.Queries
 
     public class GetUggVersionQueryHandler : IRequestHandler<GetUggVersionQuery, string>
     {
-        private readonly string _uggPageUrl;
+        private readonly string _uggPatchUrl;
         private readonly HttpClient _client;
         private readonly ILogger<GetUggVersionQueryHandler> _logger;
 
@@ -23,30 +27,52 @@ namespace LeagueOfItems.Application.Ugg.Queries
         {
             _logger = logger;
             _client = clientFactory.CreateClient();
-            _uggPageUrl = configuration["Ugg:PatchPageUrl"];
+            _uggPatchUrl = configuration["Ugg:PatchUpdateUrl"];
         }
 
         public async Task<string> Handle(GetUggVersionQuery request, CancellationToken cancellationToken)
         {
-            var response = await _client.GetAsync(_uggPageUrl, cancellationToken);
+            var response = await _client.GetAsync(_uggPatchUrl, cancellationToken);
 
             response.EnsureSuccessStatusCode();
 
-            var html = await response.Content.ReadAsStringAsync(cancellationToken);
+            var text = await response.Content.ReadAsStringAsync(cancellationToken);
 
-            var match = new Regex("Patch (\\d+\\.\\d+)").Match(html);
-
-            if (!match.Success)
+            var jsonDictionary = JsonSerializer.Deserialize<Dictionary<string, dynamic>>(text);
+            if (jsonDictionary == null)
             {
-                _logger.LogCritical("Couldn't find Ugg Version in Tierlist page");
                 return null;
             }
 
-            var version = match.Groups[1].Value;
+            var version = jsonDictionary.Keys.Select(v => v.Split("_")
+                    .Select(int.Parse).ToList())
+                .Aggregate((max, v) => VersionIsGreater(max, v) ? max : v);
             
-            _logger.LogInformation("Got Ugg version {Version}", version);
+            var versionString = string.Join(".", version);
 
-            return version;
+            _logger.LogInformation("Got Ugg version {Version}", versionString);
+
+            return versionString;
+        }
+
+        private static bool VersionIsGreater(IReadOnlyList<int> a, IReadOnlyList<int> b)
+        {
+            var aMajor = a[0];
+            var aMinor = a[1];
+
+            var bMajor = b[0];
+            var bMinor = b[1];
+
+            if (aMajor > bMajor)
+            {
+                return true;
+            }
+            else if (bMajor < aMajor)
+            {
+                return false;
+            }
+
+            return bMinor < aMinor;
         }
     }
 }
