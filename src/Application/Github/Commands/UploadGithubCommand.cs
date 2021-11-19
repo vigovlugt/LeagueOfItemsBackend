@@ -84,7 +84,7 @@ namespace LeagueOfItems.Application.Github.Commands
         {
             _logger.LogInformation("Getting Dataset as JSON");
             var patch = await _mediator.Send(new GetUggVersionQuery());
-            var previousPatch = UggVersionHelper.GetPreviousVersion(patch);
+            var previousPatch = LolVersionHelper.GetPreviousVersion(patch);
 
             _logger.LogInformation("Getting all Items");
             var itemStats = await _mediator.Send(new GetAllItemsQuery(patch));

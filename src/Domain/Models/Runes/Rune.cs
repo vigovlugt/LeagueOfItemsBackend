@@ -55,5 +55,10 @@ namespace LeagueOfItems.Domain.Models.Runes
                 LongDescription = riotRune.LongDesc
             };
         }
+
+        public Rune Clone()
+        {
+            return new Rune(this);
+        }
     }
 }

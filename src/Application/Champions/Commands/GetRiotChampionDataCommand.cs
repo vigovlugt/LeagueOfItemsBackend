@@ -95,8 +95,8 @@ namespace LeagueOfItems.Application.Champions.Commands
 
         private async Task SaveChampions(List<Champion> champions)
         {
-            await _mediator.Send(new DeleteAllChampionsCommand());
-
+            var existing = _context.Champions.Where(c => champions.Select(c => c.Id).Contains(c.Id)).ToList();
+            _context.Champions.RemoveRange(existing);
             _context.Champions.AddRange(champions);
 
             await _context.SaveChangesAsync();

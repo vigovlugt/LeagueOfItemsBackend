@@ -46,12 +46,22 @@ namespace LeagueOfItems.ConsoleApp.Services
                 switch (args[1])
                 {
                     case "riot":
-                        var version = await _mediator.Send(new GetRiotVersionQuery(), cancellationToken);
+                        var versions = await _mediator.Send(new GetRiotVersionsQuery(), cancellationToken);
+                        var version = versions[0];
+                        var previousRiotVersion = LolVersionHelper.GetPreviousVersion(versions);
 
+                        await _mediator.Send(new DeleteAllChampionsCommand(), cancellationToken);
+                        await _mediator.Send(new DeleteAllItemsCommand(), cancellationToken);
+                        await _mediator.Send(new DeleteAllRunesCommand(), cancellationToken);
+
+                        await _mediator.Send(new GetRiotChampionDataCommand(previousRiotVersion), cancellationToken);
+                        await _mediator.Send(new GetRiotItemDataCommand(previousRiotVersion), cancellationToken);
+                        await _mediator.Send(new GetRiotRuneDataCommand(previousRiotVersion), cancellationToken);
+                        
                         await _mediator.Send(new GetRiotChampionDataCommand(version), cancellationToken);
                         await _mediator.Send(new GetRiotItemDataCommand(version), cancellationToken);
                         await _mediator.Send(new GetRiotRuneDataCommand(version), cancellationToken);
-
+                        
                         break;
                     case "ugg":
                         await _mediator.Send(new DeleteAllRuneDataCommand());
@@ -72,7 +82,7 @@ namespace LeagueOfItems.ConsoleApp.Services
                         
                         _logger.LogInformation("Downloading info for previous UGG Patch");
 
-                        var previousVersion = UggVersionHelper.GetPreviousVersion(uggVersion);
+                        var previousVersion = LolVersionHelper.GetPreviousVersion(uggVersion);
                         await _mediator.Send(new GetUggChampionDataCommand(previousVersion), cancellationToken);
                         await _mediator.Send(new GetUggItemDataCommand(previousVersion), cancellationToken);
                         await _mediator.Send(new GetUggRuneDataCommand(previousVersion), cancellationToken);

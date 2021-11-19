@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -18,7 +19,7 @@ namespace LeagueOfItems.Application.Runes.Commands
         {
             Version = version;
         }
-        
+
         public string Version { get; init; }
     }
 
@@ -65,8 +66,18 @@ namespace LeagueOfItems.Application.Runes.Commands
 
         private async Task SaveRunePaths(List<RunePath> runePaths)
         {
-            await _mediator.Send(new DeleteAllRunesCommand());
+            var existing = _context.Runes.ToList();
 
+            foreach (var existingRune in existing)
+            {
+                var runePath = runePaths.Find(p => p.Id == existingRune.RunePathId);
+                if (!runePath.Runes.Select(r => r.Id).Contains(existingRune.Id))
+                {
+                    runePath.Runes.Add(existingRune.Clone());
+                }
+            }
+            
+            _context.RunePaths.RemoveRange(_context.RunePaths.ToList());
             _context.RunePaths.AddRange(runePaths);
 
             await _context.SaveChangesAsync();

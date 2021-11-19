@@ -69,8 +69,8 @@ namespace LeagueOfItems.Application.Items.Commands
 
         private async Task SaveItems(List<Item> items)
         {
-            await _mediator.Send(new DeleteAllItemsCommand());
-
+            var existing = _context.Items.Where(c => items.Select(i => i.Id).Contains(c.Id)).ToList();
+            _context.Items.RemoveRange(existing);
             _context.Items.AddRange(items);
 
             await _context.SaveChangesAsync();
