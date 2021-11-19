@@ -18,7 +18,7 @@ namespace LeagueOfItems.Domain.Models.Runes
             Matches = RuneData.Sum(d => d.Matches);
 
             ChampionStats = RuneData
-                .GroupBy(c => c.Champion)
+                .GroupBy(c => c.Champion, new ChampionComparer())
                 .Where(grouping => grouping.Sum(stats => stats.Matches) > Math.Max(
                     grouping.Key.ChampionData.Sum(c => c.Matches) * Constants.MatchMinimumRelative, Constants.MinimumMatches))
                 .Select(grouping => new RuneChampionStats(rune.Id, grouping.Key.Id, grouping.ToList()))

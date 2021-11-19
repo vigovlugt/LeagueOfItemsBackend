@@ -20,7 +20,7 @@ namespace LeagueOfItems.Domain.Models.Items
             Matches = ItemData.Sum(d => d.Matches);
 
             ChampionStats = ItemData
-                .GroupBy(c => c.Champion)
+                .GroupBy(c => c.Champion, new ChampionComparer())
                 .Where(grouping => grouping.Sum(i => i.Matches) >
                                    Math.Max(
                                        grouping.Key.ChampionData.Sum(i => i.Matches) *
@@ -33,7 +33,7 @@ namespace LeagueOfItems.Domain.Models.Items
             {
                 var championStats = ItemData
                     .Where(itemData => itemData.Order == i)
-                    .GroupBy(c => c.Champion)
+                    .GroupBy(c => c.Champion, new ChampionComparer())
                     .Where(grouping =>
                         grouping.Sum(d => d.Matches) > Math.Max(grouping.Key.ChampionData.Sum(d => d.Matches) *
                                                                 Constants.MatchMinimumRelative,

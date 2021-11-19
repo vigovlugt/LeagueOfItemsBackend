@@ -48,4 +48,17 @@ namespace LeagueOfItems.Domain.Models.Champions
             Id = int.Parse(riotChampion.Key);
         }
     }
+
+    public class ChampionComparer : IEqualityComparer<Champion>
+    {
+        public bool Equals(Champion a, Champion b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public int GetHashCode(Champion c)
+        {
+            return c.Id.GetHashCode();
+        }
+    }
 }
