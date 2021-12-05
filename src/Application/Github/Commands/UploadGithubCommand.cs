@@ -7,7 +7,9 @@ using LeagueOfItems.Application.Builds;
 using LeagueOfItems.Application.Champions.Queries;
 using LeagueOfItems.Application.Champions.Services;
 using LeagueOfItems.Application.Items.Queries;
+using LeagueOfItems.Application.Items.Services;
 using LeagueOfItems.Application.Runes.Queries;
+using LeagueOfItems.Application.Runes.Services;
 using LeagueOfItems.Application.Ugg.Helpers;
 using LeagueOfItems.Application.Ugg.Queries;
 using LeagueOfItems.Domain.Models;
@@ -88,14 +90,18 @@ namespace LeagueOfItems.Application.Github.Commands
 
             _logger.LogInformation("Getting all Items");
             var itemStats = await _mediator.Send(new GetAllItemsQuery(patch));
+            var previousItemStats = await _mediator.Send(new GetAllItemsQuery(previousPatch));
+            PreviousItemStatsService.SetPreviousItemStats(itemStats, previousItemStats);
 
             _logger.LogInformation("Getting all Runes");
             var runeStats = await _mediator.Send(new GetAllRunesQuery(patch));
+            var previousRuneStats = await _mediator.Send(new GetAllRunesQuery(previousPatch));
+            PreviousRuneStatsService.SetPreviousRuneStats(runeStats, previousRuneStats);
 
             _logger.LogInformation("Getting all Champions");
             var championStats = await _mediator.Send(new GetAllChampionsQuery(patch));
             var previousChampionStats = await _mediator.Send(new GetAllChampionsQuery(previousPatch));
-            PreviousChampionStats.SetPreviousChampionStats(championStats, previousChampionStats);
+            PreviousChampionStatsService.SetPreviousChampionStats(championStats, previousChampionStats);
 
             var buildStats = BuildAnalyzer.GetNewBuilds(championStats, previousChampionStats);
             // var buildsDataset = BuildAnalyzer.CreateBuildDataset(buildStats);

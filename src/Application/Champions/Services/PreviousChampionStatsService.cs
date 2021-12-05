@@ -4,7 +4,7 @@ using LeagueOfItems.Domain.Models.Champions;
 
 namespace LeagueOfItems.Application.Champions.Services
 {
-    public static class PreviousChampionStats
+    public static class PreviousChampionStatsService
     {
         public static void SetPreviousChampionStats(List<ChampionStats> stats, List<ChampionStats> previous)
         {

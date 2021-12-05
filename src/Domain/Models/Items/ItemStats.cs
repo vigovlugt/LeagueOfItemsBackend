@@ -10,6 +10,9 @@ namespace LeagueOfItems.Domain.Models.Items
     {
         public int Wins { get; set; }
         public int Matches { get; set; }
+        
+        public int PreviousWins { get; set; }
+        public int PreviousMatches { get; set; }
 
         public List<ItemChampionStats> ChampionStats { get; set; }
         public List<ItemOrderStats> OrderStats { get; set; }

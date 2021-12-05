@@ -10,6 +10,10 @@ namespace LeagueOfItems.Domain.Models.Runes
     {
         public int Wins { get; set; }
         public int Matches { get; set; }
+        
+        public int PreviousWins { get; set; }
+        public int PreviousMatches { get; set; }
+        
         public List<RuneChampionStats> ChampionStats { get; set; }
 
         public RuneStats(Rune rune) : base(rune)
