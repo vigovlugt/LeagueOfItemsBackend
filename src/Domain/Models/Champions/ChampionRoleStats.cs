@@ -10,6 +10,8 @@ namespace LeagueOfItems.Domain.Models.Champions
         public Role Role { get; set; }
         public int Wins { get; set; }
         public int Matches { get; set; }
+        public int PreviousWins { get; set; }
+        public int PreviousMatches { get; set; }
 
         public ChampionRoleStats(Role role, List<ChampionData> championData)
         {

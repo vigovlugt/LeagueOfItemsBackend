@@ -26,19 +26,6 @@ namespace LeagueOfItems.Application.Builds
             return list;
         }
 
-        public static BuildDataset CreateBuildDataset(List<BuildStats> buildStats)
-        {
-            var buildStatsByPlayrateIncrease = buildStats.OrderByDescending(b => b.PlayRate - b.PreviousPlayRate).ToList();
-            var buildStatsByWinrateIncrease = buildStats
-                .OrderByDescending(b => b.Wins / b.Matches - b.PreviousWins / b.PreviousMatches).ToList();
-
-            return new BuildDataset
-            {
-                PlayRateBuilds = buildStatsByPlayrateIncrease,
-                WinRateBuilds = buildStatsByWinrateIncrease
-            };
-        }
-
         private static List<BuildStats> GetBuildsFromChampion(ChampionStats championStats,
             ChampionStats previousChampionStats)
         {
@@ -61,16 +48,16 @@ namespace LeagueOfItems.Application.Builds
 
                 foreach (var itemStats in orderStats.ItemStats)
                 {
-                    var previousItemStats = previousOrderStats.ItemStats.Find(o => o.ItemId == itemStats.ItemId);
-                    if (previousItemStats != null)
+                    var previousItemStats =
+                        previousOrderStats.ItemStats.Find(o =>
+                            o.ItemId == itemStats.ItemId && o.Matches >= 500);
+
+                    if (itemStats.Matches < 500)
                     {
-                        if (itemStats.Matches < 1000)
-                        {
-                            continue;
-                        }
-                        
-                        list.Add(new BuildStats(itemStats, previousItemStats, orderStats, previousOrderStats));
+                        continue;
                     }
+
+                    list.Add(new BuildStats(itemStats, previousItemStats, orderStats, previousOrderStats));
                 }
             }
 
@@ -83,16 +70,13 @@ namespace LeagueOfItems.Application.Builds
             var list = new List<BuildStats>();
             foreach (var runeStats in championStats.RuneStats)
             {
-                var previousRuneStats = previousChampionStats.RuneStats.Find(o => o.RuneId == runeStats.RuneId);
-                if (previousRuneStats == null)
+                if (runeStats.Matches < 500)
                 {
                     continue;
                 }
-                
-                if (runeStats.Matches < 1000)
-                {
-                    continue;
-                }
+
+                var previousRuneStats =
+                    previousChampionStats.RuneStats.Find(o => o.RuneId == runeStats.RuneId && o.Matches >= 500);
 
                 list.Add(new BuildStats(runeStats, previousRuneStats, championStats, previousChampionStats));
             }

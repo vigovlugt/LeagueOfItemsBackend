@@ -12,7 +12,6 @@ using LeagueOfItems.Application.Runes.Queries;
 using LeagueOfItems.Application.Runes.Services;
 using LeagueOfItems.Application.Ugg.Helpers;
 using LeagueOfItems.Application.Ugg.Queries;
-using LeagueOfItems.Domain.Models;
 using LeagueOfItems.Domain.Models.Dataset;
 using MediatR;
 using Microsoft.Extensions.Configuration;
@@ -21,9 +20,7 @@ using Octokit;
 
 namespace LeagueOfItems.Application.Github.Commands
 {
-    public record UploadGithubCommand : MediatR.IRequest
-    {
-    }
+    public record UploadGithubCommand : IRequest;
 
     public class UploadGithubCommandHandler : IRequestHandler<UploadGithubCommand>
     {
@@ -104,7 +101,6 @@ namespace LeagueOfItems.Application.Github.Commands
             PreviousChampionStatsService.SetPreviousChampionStats(championStats, previousChampionStats);
 
             var buildStats = BuildAnalyzer.GetNewBuilds(championStats, previousChampionStats);
-            // var buildsDataset = BuildAnalyzer.CreateBuildDataset(buildStats);
 
             var dataset = new Dataset
             {

@@ -12,10 +12,24 @@ namespace LeagueOfItems.Application.Champions.Services
 
             foreach (var stat in stats)
             {
-                var previousStat = previousById[stat.Id];
+                var previousStat = previousById.GetValueOrDefault(stat.Id);
                 if (previousStat == null)
                 {
                     continue;
+                }
+                
+                var previousRoleById = previousStat.RoleStats.ToDictionary(s => s.Role);
+                
+                foreach (var roleStats in stat.RoleStats)
+                {
+                    var previousRoleStat = previousRoleById.GetValueOrDefault(roleStats.Role);
+                    if (previousRoleStat == null)
+                    {
+                        continue;
+                    }
+                    
+                    roleStats.PreviousMatches = previousRoleStat.Matches;
+                    roleStats.PreviousWins = previousRoleStat.Wins;
                 }
 
                 stat.PreviousMatches = previousStat.Matches;

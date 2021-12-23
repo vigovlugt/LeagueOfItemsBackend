@@ -28,11 +28,14 @@ namespace LeagueOfItems.Domain.Models.Common
         {
             Wins = currentStats.Wins;
             Matches = currentStats.Matches;
-            PlayRate = (float) currentStats.Matches / (float) totalStats.Matches;
+            PlayRate = currentStats.Matches / (float) totalStats.Matches;
 
-            PreviousWins = previousStats.Wins;
-            PreviousMatches = previousStats.Matches;
-            PreviousPlayRate = (float) previousStats.Matches / (float) previousTotalStats.Matches;
+            if (previousStats != null)
+            {
+                PreviousWins = previousStats.Wins;
+                PreviousMatches = previousStats.Matches;
+                PreviousPlayRate = previousStats.Matches / (float) previousTotalStats.Matches;
+            }
 
             if (currentStats.GetType() == typeof(ChampionRuneStats))
             {
