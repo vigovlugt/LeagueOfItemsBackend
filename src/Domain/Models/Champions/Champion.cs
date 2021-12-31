@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using LeagueOfItems.Domain.Models.BuildPaths;
 using LeagueOfItems.Domain.Models.Items;
 using LeagueOfItems.Domain.Models.Riot;
 using LeagueOfItems.Domain.Models.Runes;
@@ -19,6 +20,7 @@ namespace LeagueOfItems.Domain.Models.Champions
         [JsonIgnore] public List<ItemData> ItemData { get; set; }
         [JsonIgnore] public List<RuneData> RuneData { get; set; }
         [JsonIgnore] public List<ChampionData> ChampionData { get; set; }
+        [JsonIgnore] public List<BuildPathData> BuildPathData { get; set; }
 
         public Champion()
         {

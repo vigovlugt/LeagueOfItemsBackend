@@ -9,15 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeagueOfItems.Application.Runes.Queries
 {
-    public record GetAllRunesQuery : IRequest<List<RuneStats>>
-    {
-        public string Patch { get; init; }
-
-        public GetAllRunesQuery(string patch)
-        {
-            Patch = patch;
-        }
-    }
+    public record GetAllRunesQuery(string Patch) : IRequest<List<RuneStats>>;
 
     public class GetAllRunesQueryHandler : IRequestHandler<GetAllRunesQuery, List<RuneStats>>
     {

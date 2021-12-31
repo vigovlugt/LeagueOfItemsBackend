@@ -8,9 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Riot.Queries
 {
-    public record GetAllRiotVersionsQuery : IRequest<List<string>>
-    {
-    }
+    public record GetAllRiotVersionsQuery : IRequest<List<string>>;
 
     public class GetAllRiotVersionsQueryHandler : IRequestHandler<GetAllRiotVersionsQuery, List<string>>
     {

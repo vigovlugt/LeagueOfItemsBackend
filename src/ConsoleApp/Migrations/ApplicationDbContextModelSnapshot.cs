@@ -15,6 +15,49 @@ namespace LeagueOfItems.ConsoleApp.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "5.0.5");
 
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.BuildPaths.BuildPathData", b =>
+                {
+                    b.Property<int>("ChampionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Item1Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Item2Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Item3Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Region")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Patch")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Matches")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Wins")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("ChampionId", "Item1Id", "Item2Id", "Item3Id", "Rank", "Region", "Role", "Patch");
+
+                    b.HasIndex("Item1Id");
+
+                    b.HasIndex("Item2Id");
+
+                    b.HasIndex("Item3Id");
+
+                    b.ToTable("BuildPathData");
+                });
+
             modelBuilder.Entity("LeagueOfItems.Domain.Models.Champions.Champion", b =>
                 {
                     b.Property<int>("Id")
@@ -27,9 +70,6 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Property<string>("Lore")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Matches")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
@@ -38,9 +78,6 @@ namespace LeagueOfItems.ConsoleApp.Migrations
 
                     b.Property<string>("Title")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Wins")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -213,6 +250,41 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RunePaths");
+                });
+
+            modelBuilder.Entity("LeagueOfItems.Domain.Models.BuildPaths.BuildPathData", b =>
+                {
+                    b.HasOne("LeagueOfItems.Domain.Models.Champions.Champion", "Champion")
+                        .WithMany()
+                        .HasForeignKey("ChampionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LeagueOfItems.Domain.Models.Items.Item", "Item1")
+                        .WithMany()
+                        .HasForeignKey("Item1Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LeagueOfItems.Domain.Models.Items.Item", "Item2")
+                        .WithMany()
+                        .HasForeignKey("Item2Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("LeagueOfItems.Domain.Models.Items.Item", "Item3")
+                        .WithMany()
+                        .HasForeignKey("Item3Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Champion");
+
+                    b.Navigation("Item1");
+
+                    b.Navigation("Item2");
+
+                    b.Navigation("Item3");
                 });
 
             modelBuilder.Entity("LeagueOfItems.Domain.Models.Champions.ChampionData", b =>

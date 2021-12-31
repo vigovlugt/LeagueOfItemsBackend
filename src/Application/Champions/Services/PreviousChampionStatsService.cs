@@ -17,19 +17,36 @@ namespace LeagueOfItems.Application.Champions.Services
                 {
                     continue;
                 }
-                
+
+                // Set role stats
                 var previousRoleById = previousStat.RoleStats.ToDictionary(s => s.Role);
-                
                 foreach (var roleStats in stat.RoleStats)
                 {
                     var previousRoleStat = previousRoleById.GetValueOrDefault(roleStats.Role);
-                    if (previousRoleStat == null)
-                    {
-                        continue;
-                    }
-                    
-                    roleStats.PreviousMatches = previousRoleStat.Matches;
-                    roleStats.PreviousWins = previousRoleStat.Wins;
+
+                    roleStats.PreviousMatches = previousRoleStat?.Matches ?? 0;
+                    roleStats.PreviousWins = previousRoleStat?.Wins ?? 0;
+                }
+
+                // Set rune stats
+                var previousRuneById = previousStat.RuneStats.ToDictionary(s => s.RuneId);
+                foreach (var runeStats in stat.RuneStats)
+                {
+                    var previousRoleStat = previousRuneById.GetValueOrDefault(runeStats.RuneId);
+
+                    runeStats.PreviousMatches = previousRoleStat?.Matches ?? 0;
+                    runeStats.PreviousWins = previousRoleStat?.Wins ?? 0;
+                }
+
+                // Set build path stats
+                var previousBuildPathById =
+                    previousStat.BuildPathStats.ToDictionary(s => new {s.Item1Id, s.Item2Id, s.Item3Id});
+                foreach (var buildPathStats in stat.BuildPathStats)
+                {
+                    var previousBuildPathStats = previousBuildPathById.GetValueOrDefault(new {buildPathStats.Item1Id, buildPathStats.Item2Id, buildPathStats.Item3Id});
+
+                    buildPathStats.PreviousMatches = previousBuildPathStats?.Matches ?? 0;
+                    buildPathStats.PreviousWins = previousBuildPathStats?.Wins ?? 0;
                 }
 
                 stat.PreviousMatches = previousStat.Matches;

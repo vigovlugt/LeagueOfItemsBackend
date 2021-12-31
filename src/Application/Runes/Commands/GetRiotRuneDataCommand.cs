@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -13,17 +12,9 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Runes.Commands
 {
-    public record GetRiotRuneDataCommand : IRequest
-    {
-        public GetRiotRuneDataCommand(string version)
-        {
-            Version = version;
-        }
+    public record GetRiotRuneDataCommand(string Version) : IRequest<List<RunePath>>;
 
-        public string Version { get; init; }
-    }
-
-    public class GetRiotRuneDataCommandHandler : IRequestHandler<GetRiotRuneDataCommand>
+    public class GetRiotRuneDataCommandHandler : IRequestHandler<GetRiotRuneDataCommand, List<RunePath>>
     {
         private readonly IMediator _mediator;
         private readonly IApplicationDbContext _context;
@@ -37,7 +28,7 @@ namespace LeagueOfItems.Application.Runes.Commands
             _logger = logger;
         }
 
-        public async Task<Unit> Handle(GetRiotRuneDataCommand request, CancellationToken cancellationToken)
+        public async Task<List<RunePath>> Handle(GetRiotRuneDataCommand request, CancellationToken cancellationToken)
         {
             var runeResponse = await GetRuneResponse(request.Version);
 
@@ -45,7 +36,7 @@ namespace LeagueOfItems.Application.Runes.Commands
 
             await SaveRunePaths(runePaths);
 
-            return Unit.Value;
+            return runePaths;
         }
 
         private async Task<List<RiotRunePath>> GetRuneResponse(string version)

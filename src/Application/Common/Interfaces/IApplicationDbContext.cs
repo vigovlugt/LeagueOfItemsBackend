@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using LeagueOfItems.Domain.Models.BuildPaths;
 using LeagueOfItems.Domain.Models.Champions;
 using LeagueOfItems.Domain.Models.Items;
 using LeagueOfItems.Domain.Models.Runes;
@@ -19,6 +20,7 @@ namespace LeagueOfItems.Application.Common.Interfaces
         DbSet<ItemData> ItemData { get; set; }
         DbSet<RuneData> RuneData { get; set; }
         DbSet<ChampionData> ChampionData { get; set; }
+        DbSet<BuildPathData> BuildPathData { get; set; }
         
         DatabaseFacade Database { get; }
 

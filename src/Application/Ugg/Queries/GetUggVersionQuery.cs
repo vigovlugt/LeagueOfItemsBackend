@@ -12,9 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Ugg.Queries
 {
-    public record GetUggVersionQuery : IRequest<string>
-    {
-    }
+    public record GetUggVersionQuery : IRequest<string>;
 
     public class GetUggVersionQueryHandler : IRequestHandler<GetUggVersionQuery, string>
     {

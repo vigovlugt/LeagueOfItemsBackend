@@ -13,17 +13,9 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Champions.Commands
 {
-    public record GetUggChampionDataCommand : IRequest
-    {
-        public string Version { get; init; }
+    public record GetUggChampionDataCommand(string Version) : IRequest<List<ChampionData>>;
 
-        public GetUggChampionDataCommand(string version)
-        {
-            Version = version;
-        }
-    }
-
-    public class GetUggChampionDataCommandHandler : IRequestHandler<GetUggChampionDataCommand>
+    public class GetUggChampionDataCommandHandler : IRequestHandler<GetUggChampionDataCommand, List<ChampionData>>
     {
         private readonly IApplicationDbContext _context;
         private readonly ILogger<GetUggChampionDataCommandHandler> _logger;
@@ -38,7 +30,7 @@ namespace LeagueOfItems.Application.Champions.Commands
             _mediator = mediator;
         }
 
-        public async Task<Unit> Handle(GetUggChampionDataCommand request, CancellationToken cancellationToken)
+        public async Task<List<ChampionData>> Handle(GetUggChampionDataCommand request, CancellationToken cancellationToken)
         {
             var champions = await _context.Champions.ToListAsync(cancellationToken);
 
@@ -50,9 +42,8 @@ namespace LeagueOfItems.Application.Champions.Commands
             var championData = championDataTasks.SelectMany(x => x.Result).ToList();
 
             await SaveChampionData(championData);
-            await SaveMatchAndWinsOnChampion(championData);
 
-            return Unit.Value;
+            return championData;
         }
 
         private async Task<List<ChampionData>> GetDataForChampion(string version, Champion champion)
@@ -89,25 +80,6 @@ namespace LeagueOfItems.Application.Champions.Commands
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("{ChampionDataAmount} ChampionData rows saved", championData.Count);
-        }
-
-        private async Task SaveMatchAndWinsOnChampion(List<ChampionData> championData)
-        {
-            var championDataGroups = championData.GroupBy(c => c.ChampionId);
-
-            var champions = _context.Champions.ToList();
-
-            foreach (var championDataGroup in championDataGroups)
-            {
-                var champion = champions.Single(c => c.Id == championDataGroup.Key);
-
-                // champion.Matches = championDataGroup.Sum(c => c.Matches);
-                // champion.Wins = championDataGroup.Sum(c => c.Wins);
-            }
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Wins and Matches saved on champions");
         }
     }
 }

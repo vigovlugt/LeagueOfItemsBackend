@@ -13,17 +13,9 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Champions.Commands
 {
-    public record GetRiotChampionDataCommand : IRequest
-    {
-        public GetRiotChampionDataCommand(string version)
-        {
-            Version = version;
-        }
+    public record GetRiotChampionDataCommand(string Version) : IRequest<List<Champion>>;
 
-        public string Version { get; init; }
-    }
-
-    public class GetRiotChampionDataCommandHandler : IRequestHandler<GetRiotChampionDataCommand>
+    public class GetRiotChampionDataCommandHandler : IRequestHandler<GetRiotChampionDataCommand, List<Champion>>
     {
         private readonly IMediator _mediator;
         private readonly IApplicationDbContext _context;
@@ -37,7 +29,7 @@ namespace LeagueOfItems.Application.Champions.Commands
             _logger = logger;
         }
 
-        public async Task<Unit> Handle(GetRiotChampionDataCommand request, CancellationToken cancellationToken)
+        public async Task<List<Champion>> Handle(GetRiotChampionDataCommand request, CancellationToken cancellationToken)
         {
             var championResponse = await GetAllRiotChampionsResponse(request.Version);
 
@@ -54,7 +46,7 @@ namespace LeagueOfItems.Application.Champions.Commands
 
             await SaveChampions(champions);
 
-            return Unit.Value;
+            return champions;
         }
 
         private async Task<List<RiotChampion>> GetAllRiotChampionsResponse(string version)

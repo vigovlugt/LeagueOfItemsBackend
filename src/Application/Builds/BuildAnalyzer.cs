@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using LeagueOfItems.Domain.Models.Champions;
 using LeagueOfItems.Domain.Models.Common;
-using LeagueOfItems.Domain.Models.Dataset;
 using LeagueOfItems.Domain.Models.Items;
 
 namespace LeagueOfItems.Application.Builds

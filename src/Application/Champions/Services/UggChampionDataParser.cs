@@ -18,7 +18,7 @@ namespace LeagueOfItems.Application.Champions.Services
             var parsed = await UggResponseParser.Parse<List<JsonElement>, ChampionData>(stream,
                 (region, rank, role, data) =>
                 {
-                    var uggChampionData = ParseChampionData(championId, data);
+                    var uggChampionData = ParseChampionData(data);
 
                     return new ChampionData
                     {
@@ -35,11 +35,10 @@ namespace LeagueOfItems.Application.Champions.Services
             return parsed;
         }
 
-        private static UggSimpleChampionData ParseChampionData(int championId, List<JsonElement> championData)
+        private static UggSimpleChampionData ParseChampionData(List<JsonElement> championData)
         {
             return new()
             {
-                ChampionId = championId,
                 Wins = championData[0][6][0].GetInt32(),
                 Matches = championData[0][6][1].GetInt32(),
             };

@@ -3,16 +3,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using LeagueOfItems.Application.Builds;
-using LeagueOfItems.Application.Champions.Queries;
-using LeagueOfItems.Application.Champions.Services;
-using LeagueOfItems.Application.Items.Queries;
-using LeagueOfItems.Application.Items.Services;
-using LeagueOfItems.Application.Runes.Queries;
-using LeagueOfItems.Application.Runes.Services;
-using LeagueOfItems.Application.Ugg.Helpers;
-using LeagueOfItems.Application.Ugg.Queries;
-using LeagueOfItems.Domain.Models.Dataset;
+using LeagueOfItems.Domain.Models.Datasets;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -20,7 +11,7 @@ using Octokit;
 
 namespace LeagueOfItems.Application.Github.Commands
 {
-    public record UploadGithubCommand : IRequest;
+    public record UploadGithubCommand(Dataset Dataset) : IRequest;
 
     public class UploadGithubCommandHandler : IRequestHandler<UploadGithubCommand>
     {
@@ -33,13 +24,10 @@ namespace LeagueOfItems.Application.Github.Commands
         private readonly string _path;
         private readonly string _fileName;
 
-        private readonly IMediator _mediator;
-
         public UploadGithubCommandHandler(ILogger<UploadGithubCommandHandler> logger,
-            IConfiguration configuration, IMediator mediator)
+            IConfiguration configuration)
         {
             _logger = logger;
-            _mediator = mediator;
 
             _client = new GitHubClient(new ProductHeaderValue("LeagueOfItems"))
             {
@@ -61,7 +49,7 @@ namespace LeagueOfItems.Application.Github.Commands
         {
             _logger.LogInformation("Uploading dataset to frontend Github");
 
-            var json = await GetDatasetJson();
+            var json = JsonSerializer.Serialize(request.Dataset, _jsonSerializerOptions);
             var sha = await GetGithubDatasetSha();
 
             await UploadDataset(json, sha);
@@ -77,43 +65,6 @@ namespace LeagueOfItems.Application.Github.Commands
 
             await _client.Repository.Content.UpdateFile(_owner, _repository, Path.Join(_path, _fileName),
                 updateFileRequest);
-        }
-
-        private async Task<string> GetDatasetJson()
-        {
-            _logger.LogInformation("Getting Dataset as JSON");
-            var patch = await _mediator.Send(new GetUggVersionQuery());
-            var previousPatch = LolVersionHelper.GetPreviousVersion(patch);
-
-            _logger.LogInformation("Getting all Items");
-            var itemStats = await _mediator.Send(new GetAllItemsQuery(patch));
-            var previousItemStats = await _mediator.Send(new GetAllItemsQuery(previousPatch));
-            PreviousItemStatsService.SetPreviousItemStats(itemStats, previousItemStats);
-
-            _logger.LogInformation("Getting all Runes");
-            var runeStats = await _mediator.Send(new GetAllRunesQuery(patch));
-            var previousRuneStats = await _mediator.Send(new GetAllRunesQuery(previousPatch));
-            PreviousRuneStatsService.SetPreviousRuneStats(runeStats, previousRuneStats);
-
-            _logger.LogInformation("Getting all Champions");
-            var championStats = await _mediator.Send(new GetAllChampionsQuery(patch));
-            var previousChampionStats = await _mediator.Send(new GetAllChampionsQuery(previousPatch));
-            PreviousChampionStatsService.SetPreviousChampionStats(championStats, previousChampionStats);
-
-            var buildStats = BuildAnalyzer.GetNewBuilds(championStats, previousChampionStats);
-
-            var dataset = new Dataset
-            {
-                Items = itemStats,
-                Runes = runeStats,
-                Champions = championStats,
-                Version = patch,
-                Builds = buildStats,
-                ChampionMatches = championStats.Sum(s => s.Matches),
-                PreviousChampionMatches = previousChampionStats.Sum(s => s.Matches),
-            };
-
-            return JsonSerializer.Serialize(dataset, _jsonSerializerOptions);
         }
 
         private async Task<string> GetGithubDatasetSha()

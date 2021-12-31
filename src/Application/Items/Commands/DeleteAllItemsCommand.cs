@@ -7,11 +7,8 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Items.Commands
 {
-    public record DeleteAllItemsCommand : IRequest
-    {
-        
-    }
-    
+    public record DeleteAllItemsCommand : IRequest;
+
     public class DeleteAllItemsCommandHandler : IRequestHandler<DeleteAllItemsCommand>
     {
         private readonly IApplicationDbContext _context;

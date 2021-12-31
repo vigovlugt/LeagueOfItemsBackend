@@ -9,15 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LeagueOfItems.Application.Champions.Queries
 {
-    public record GetAllChampionsQuery : IRequest<List<ChampionStats>>
-    {
-        public string Patch { get; init; }
-
-        public GetAllChampionsQuery(string patch)
-        {
-            Patch = patch;
-        }
-    }
+    public record GetAllChampionsQuery(string Patch) : IRequest<List<ChampionStats>>;
 
     public class GetAllChampionsQueryHandler : IRequestHandler<GetAllChampionsQuery, List<ChampionStats>>
     {
@@ -34,11 +26,12 @@ namespace LeagueOfItems.Application.Champions.Queries
                 .Include(c => c.ChampionData.Where(d => d.Patch == request.Patch))
                 .Include(c => c.ItemData.Where(d => d.Patch == request.Patch))
                 .Include(c => c.RuneData.Where(d => d.Patch == request.Patch))
+                .Include(c => c.BuildPathData.Where(d => d.Patch == request.Patch))
                 .OrderBy(c => c.Name)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
 
-            var championStats = champions.Select(c => new ChampionStats(c, c.ItemData, c.RuneData)).ToList();
+            var championStats = champions.Select(c => new ChampionStats(c, c.ItemData, c.RuneData, c.BuildPathData)).ToList();
 
             return championStats;
         }

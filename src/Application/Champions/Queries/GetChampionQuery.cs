@@ -32,9 +32,10 @@ namespace LeagueOfItems.Application.Champions.Queries
                 .Include(c => c.ChampionData)
                 .Include(c => c.ItemData)
                 .Include(c => c.RuneData)
+                .Include(c => c.BuildPathData)
                 .SingleAsync(i => i.Id == request.Id, cancellationToken);
 
-            return new ChampionStats(champion, champion.ItemData, champion.RuneData);
+            return new ChampionStats(champion, champion.ItemData, champion.RuneData, champion.BuildPathData);
         }
     }
 }

@@ -9,8 +9,12 @@ namespace LeagueOfItems.Domain.Models.Champions
     {
         public int ChampionId { get; set; }
         public int RuneId { get; set; }
+        
         public int Wins { get; set; }
         public int Matches { get; set; }
+        
+        public int PreviousWins { get; set; }
+        public int PreviousMatches { get; set; }
 
         public ChampionRuneStats(int championId, int runeId, List<RuneData> runeData)
         {

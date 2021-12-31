@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
+using LeagueOfItems.Domain.Models.BuildPaths;
 using LeagueOfItems.Domain.Models.Champions;
 using LeagueOfItems.Domain.Models.Items;
 using LeagueOfItems.Domain.Models.Runes;
@@ -21,10 +22,11 @@ namespace LeagueOfItems.Infrastructure.Data
 
         public DbSet<RunePath> RunePaths { get; set; }
         public DbSet<Rune> Runes { get; set; }
-
+        
         public DbSet<ItemData> ItemData { get; set; }
         public DbSet<RuneData> RuneData { get; set; }
         public DbSet<ChampionData> ChampionData { get; set; }
+        public DbSet<BuildPathData> BuildPathData { get; set; }
 
         public Task<int> SaveChangesAsync()
         {
@@ -43,19 +45,11 @@ namespace LeagueOfItems.Infrastructure.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Item>()
-                .HasMany(i => i.ItemData)
-                .WithOne(d => d.Item);
-
-            modelBuilder.Entity<Rune>()
-                .HasMany(i => i.RuneData)
-                .WithOne(d => d.Rune);
-
             modelBuilder.Entity<RunePath>()
                 .HasMany(p => p.Runes)
                 .WithOne(b => b.RunePath)
                 .IsRequired();
-
+            
             modelBuilder.Entity<ItemData>()
                 .HasKey(i => new {i.ItemId, i.ChampionId, i.Rank, i.Order, i.Region, i.Role, i.Patch});
 
@@ -64,6 +58,9 @@ namespace LeagueOfItems.Infrastructure.Data
 
             modelBuilder.Entity<ChampionData>()
                 .HasKey(i => new {i.ChampionId, i.Rank, i.Region, i.Role, i.Patch});
+            
+            modelBuilder.Entity<BuildPathData>()
+                .HasKey(i => new {i.ChampionId, i.Item1Id, i.Item2Id, i.Item3Id, i.Rank, i.Region, i.Role, i.Patch});
         }
     }
 }

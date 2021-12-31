@@ -7,9 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Runes.Commands
 {
-    public record DeleteAllRunesCommand : IRequest
-    {
-    }
+    public record DeleteAllRunesCommand : IRequest;
 
     public class DeleteAllRunesCommandHandler : IRequestHandler<DeleteAllRunesCommand>
     {

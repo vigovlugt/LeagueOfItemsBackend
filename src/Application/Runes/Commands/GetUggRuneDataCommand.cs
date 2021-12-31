@@ -14,17 +14,9 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Runes.Commands
 {
-    public record GetUggRuneDataCommand : IRequest
-    {
-        public string Version { get; set; }
+    public record GetUggRuneDataCommand(string Version) : IRequest<List<RuneData>>;
 
-        public GetUggRuneDataCommand(string version)
-        {
-            Version = version;
-        }
-    }
-
-    public class GetUggRuneDataCommandHandler : IRequestHandler<GetUggRuneDataCommand>
+    public class GetUggRuneDataCommandHandler : IRequestHandler<GetUggRuneDataCommand, List<RuneData>>
     {
         private readonly IApplicationDbContext _context;
         private readonly ILogger<GetUggRuneDataCommandHandler> _logger;
@@ -38,7 +30,7 @@ namespace LeagueOfItems.Application.Runes.Commands
             _mediator = mediator;
         }
 
-        public async Task<Unit> Handle(GetUggRuneDataCommand request, CancellationToken cancellationToken)
+        public async Task<List<RuneData>> Handle(GetUggRuneDataCommand request, CancellationToken cancellationToken)
         {
             var champions = await _context.Champions.ToListAsync(cancellationToken);
 
@@ -51,7 +43,7 @@ namespace LeagueOfItems.Application.Runes.Commands
 
             await SaveRuneData(runeData);
 
-            return Unit.Value;
+            return runeData;
         }
 
         private async Task<List<RuneData>> GetRuneDataForChampion(string version, Champion champion)

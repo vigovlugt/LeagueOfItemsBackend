@@ -14,18 +14,9 @@ using Microsoft.Extensions.Logging;
 
 namespace LeagueOfItems.Application.Items.Commands
 {
-    public record GetUggItemDataCommand : IRequest
-    {
-        public string Version { get; init; }
+    public record GetUggItemDataCommand(string Version) : IRequest<List<ItemData>>;
 
-
-        public GetUggItemDataCommand(string version)
-        {
-            Version = version;
-        }
-    }
-
-    public class GetUggItemDataCommandHandler : IRequestHandler<GetUggItemDataCommand>
+    public class GetUggItemDataCommandHandler : IRequestHandler<GetUggItemDataCommand, List<ItemData>>
     {
         private readonly IApplicationDbContext _context;
         private readonly ILogger<GetUggItemDataCommandHandler> _logger;
@@ -39,7 +30,7 @@ namespace LeagueOfItems.Application.Items.Commands
             _mediator = mediator;
         }
 
-        public async Task<Unit> Handle(GetUggItemDataCommand request, CancellationToken cancellationToken)
+        public async Task<List<ItemData>> Handle(GetUggItemDataCommand request, CancellationToken cancellationToken)
         {
             var champions = await _context.Champions.ToListAsync(cancellationToken);
 
@@ -52,7 +43,7 @@ namespace LeagueOfItems.Application.Items.Commands
 
             await SaveItemData(itemData);
 
-            return Unit.Value;
+            return itemData;
         }
 
         private async Task<List<ItemData>> GetItemDataForChampion(string version, Champion champion)
