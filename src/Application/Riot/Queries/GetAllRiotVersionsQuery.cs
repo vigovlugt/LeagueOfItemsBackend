@@ -6,33 +6,32 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace LeagueOfItems.Application.Riot.Queries
+namespace LeagueOfItems.Application.Riot.Queries;
+
+public record GetAllRiotVersionsQuery : IRequest<List<string>>;
+
+public class GetAllRiotVersionsQueryHandler : IRequestHandler<GetAllRiotVersionsQuery, List<string>>
 {
-    public record GetAllRiotVersionsQuery : IRequest<List<string>>;
+    private readonly IMediator _mediator;
+    private readonly ILogger<GetAllRiotVersionsQueryHandler> _logger;
 
-    public class GetAllRiotVersionsQueryHandler : IRequestHandler<GetAllRiotVersionsQuery, List<string>>
+    public GetAllRiotVersionsQueryHandler(IMediator mediator, ILogger<GetAllRiotVersionsQueryHandler> logger)
     {
-        private readonly IMediator _mediator;
-        private readonly ILogger<GetAllRiotVersionsQueryHandler> _logger;
+        _mediator = mediator;
+        _logger = logger;
+    }
 
-        public GetAllRiotVersionsQueryHandler(IMediator mediator, ILogger<GetAllRiotVersionsQueryHandler> logger)
+    public async Task<List<string>> Handle(GetAllRiotVersionsQuery request, CancellationToken cancellationToken)
+    {
+        var responseStream = await _mediator.Send(new GetRiotApiResponse
         {
-            _mediator = mediator;
-            _logger = logger;
-        }
+            Url = "api/versions.json"
+        }, cancellationToken);
 
-        public async Task<List<string>> Handle(GetAllRiotVersionsQuery request, CancellationToken cancellationToken)
-        {
-            var responseStream = await _mediator.Send(new GetRiotApiResponse
-            {
-                Url = "api/versions.json"
-            }, cancellationToken);
+        var versions =
+            await JsonSerializer.DeserializeAsync<List<string>>(responseStream,
+                cancellationToken: cancellationToken);
 
-            var versions =
-                await JsonSerializer.DeserializeAsync<List<string>>(responseStream,
-                    cancellationToken: cancellationToken);
-
-            return versions;
-        }
+        return versions;
     }
 }

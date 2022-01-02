@@ -7,33 +7,32 @@ using LeagueOfItems.Domain.Models.Champions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace LeagueOfItems.Application.Champions.Queries
+namespace LeagueOfItems.Application.Champions.Queries;
+
+public record GetAllChampionsQuery(string Patch) : IRequest<List<ChampionStats>>;
+
+public class GetAllChampionsQueryHandler : IRequestHandler<GetAllChampionsQuery, List<ChampionStats>>
 {
-    public record GetAllChampionsQuery(string Patch) : IRequest<List<ChampionStats>>;
+    private readonly IApplicationDbContext _context;
 
-    public class GetAllChampionsQueryHandler : IRequestHandler<GetAllChampionsQuery, List<ChampionStats>>
+    public GetAllChampionsQueryHandler(IApplicationDbContext context)
     {
-        private readonly IApplicationDbContext _context;
+        _context = context;
+    }
 
-        public GetAllChampionsQueryHandler(IApplicationDbContext context)
-        {
-            _context = context;
-        }
+    public async Task<List<ChampionStats>> Handle(GetAllChampionsQuery request, CancellationToken cancellationToken)
+    {
+        var champions = await _context.Champions
+            .Include(c => c.ChampionData.Where(d => d.Patch == request.Patch))
+            .Include(c => c.ItemData.Where(d => d.Patch == request.Patch))
+            .Include(c => c.RuneData.Where(d => d.Patch == request.Patch))
+            .Include(c => c.BuildPathData.Where(d => d.Patch == request.Patch))
+            .OrderBy(c => c.Name)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
-        public async Task<List<ChampionStats>> Handle(GetAllChampionsQuery request, CancellationToken cancellationToken)
-        {
-            var champions = await _context.Champions
-                .Include(c => c.ChampionData.Where(d => d.Patch == request.Patch))
-                .Include(c => c.ItemData.Where(d => d.Patch == request.Patch))
-                .Include(c => c.RuneData.Where(d => d.Patch == request.Patch))
-                .Include(c => c.BuildPathData.Where(d => d.Patch == request.Patch))
-                .OrderBy(c => c.Name)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+        var championStats = champions.Select(c => new ChampionStats(c, c.ItemData, c.RuneData, c.BuildPathData)).ToList();
 
-            var championStats = champions.Select(c => new ChampionStats(c, c.ItemData, c.RuneData, c.BuildPathData)).ToList();
-
-            return championStats;
-        }
+        return championStats;
     }
 }

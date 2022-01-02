@@ -1,8 +1,7 @@
-namespace LeagueOfItems.Domain.Models.Common
+namespace LeagueOfItems.Domain.Models.Common;
+
+public interface IStats
 {
-    public interface IStats
-    {
-        public int Wins { get; set; }
-        public int Matches { get; set; }
-    }
+    public int Wins { get; set; }
+    public int Matches { get; set; }
 }

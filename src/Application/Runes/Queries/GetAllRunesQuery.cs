@@ -7,33 +7,32 @@ using LeagueOfItems.Domain.Models.Runes;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace LeagueOfItems.Application.Runes.Queries
+namespace LeagueOfItems.Application.Runes.Queries;
+
+public record GetAllRunesQuery(string Patch) : IRequest<List<RuneStats>>;
+
+public class GetAllRunesQueryHandler : IRequestHandler<GetAllRunesQuery, List<RuneStats>>
 {
-    public record GetAllRunesQuery(string Patch) : IRequest<List<RuneStats>>;
+    private readonly IApplicationDbContext _context;
 
-    public class GetAllRunesQueryHandler : IRequestHandler<GetAllRunesQuery, List<RuneStats>>
+    public GetAllRunesQueryHandler(IApplicationDbContext context)
     {
-        private readonly IApplicationDbContext _context;
+        _context = context;
+    }
 
-        public GetAllRunesQueryHandler(IApplicationDbContext context)
-        {
-            _context = context;
-        }
+    public async Task<List<RuneStats>> Handle(GetAllRunesQuery request, CancellationToken cancellationToken)
+    {
+        var items = await _context.Runes
+            .Include(r => r.RunePath)
+            .Include(i => i.RuneData.Where(d => d.Patch == request.Patch))
+            .ThenInclude(i => i.Champion).ThenInclude(c => c.ChampionData.Where(d => d.Patch == request.Patch))
+            .Where(i => i.RuneData.Count != 0)
+            .OrderBy(i => i.Name)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
-        public async Task<List<RuneStats>> Handle(GetAllRunesQuery request, CancellationToken cancellationToken)
-        {
-            var items = await _context.Runes
-                .Include(r => r.RunePath)
-                .Include(i => i.RuneData.Where(d => d.Patch == request.Patch))
-                .ThenInclude(i => i.Champion).ThenInclude(c => c.ChampionData.Where(d => d.Patch == request.Patch))
-                .Where(i => i.RuneData.Count != 0)
-                .OrderBy(i => i.Name)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+        var runeStats = items.Select(r => new RuneStats(r)).ToList();
 
-            var runeStats = items.Select(r => new RuneStats(r)).ToList();
-
-            return runeStats;
-        }
+        return runeStats;
     }
 }

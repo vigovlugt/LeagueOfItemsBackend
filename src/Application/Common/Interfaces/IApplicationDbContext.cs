@@ -7,25 +7,24 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace LeagueOfItems.Application.Common.Interfaces
+namespace LeagueOfItems.Application.Common.Interfaces;
+
+public interface IApplicationDbContext
 {
-    public interface IApplicationDbContext
-    {
-        DbSet<Item> Items { get; set; }
-        DbSet<Champion> Champions { get; set; }
+    DbSet<Item> Items { get; set; }
+    DbSet<Champion> Champions { get; set; }
 
-        DbSet<RunePath> RunePaths { get; set; }
-        DbSet<Rune> Runes { get; set; }
+    DbSet<RunePath> RunePaths { get; set; }
+    DbSet<Rune> Runes { get; set; }
 
-        DbSet<ItemData> ItemData { get; set; }
-        DbSet<RuneData> RuneData { get; set; }
-        DbSet<ChampionData> ChampionData { get; set; }
-        DbSet<BuildPathData> BuildPathData { get; set; }
+    DbSet<ItemData> ItemData { get; set; }
+    DbSet<RuneData> RuneData { get; set; }
+    DbSet<ChampionData> ChampionData { get; set; }
+    DbSet<BuildPathData> BuildPathData { get; set; }
         
-        DatabaseFacade Database { get; }
+    DatabaseFacade Database { get; }
 
-        EntityEntry<TEntity> Entry<TEntity>(TEntity entity) where TEntity : class;
+    EntityEntry<TEntity> Entry<TEntity>(TEntity entity) where TEntity : class;
 
-        Task<int> SaveChangesAsync();
-    }
+    Task<int> SaveChangesAsync();
 }

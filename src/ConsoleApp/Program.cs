@@ -8,33 +8,32 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-namespace LeagueOfItems.ConsoleApp
-{
-    public class Program
-    {
-        public static async Task Main(string[] args)
-        {
-            await CreateHostBuilder(args).RunConsoleAsync();
-        }
+namespace LeagueOfItems.ConsoleApp;
 
-        private static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            return Host.CreateDefaultBuilder(args)
-                .ConfigureServices((_, services) =>
-                {
-                    services.AddHostedService<ConsoleService>();
-                    services.AddApplication();
-                    services.AddInfrastructure();
-                })
-                .ConfigureAppConfiguration(config =>
-                    config
-                        .AddUserSecrets<Program>()
-                        .AddEnvironmentVariables()
-                        .AddJsonFile("appsettings.json")
-                        .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
-                            true))
-                .UseSerilog((hostContext, loggerConfiguration) =>
-                    loggerConfiguration.ReadFrom.Configuration(hostContext.Configuration));
-        }
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        await CreateHostBuilder(args).RunConsoleAsync();
+    }
+
+    private static IHostBuilder CreateHostBuilder(string[] args)
+    {
+        return Host.CreateDefaultBuilder(args)
+            .ConfigureServices((_, services) =>
+            {
+                services.AddHostedService<ConsoleService>();
+                services.AddApplication();
+                services.AddInfrastructure();
+            })
+            .ConfigureAppConfiguration(config =>
+                config
+                    .AddUserSecrets<Program>()
+                    .AddEnvironmentVariables()
+                    .AddJsonFile("appsettings.json")
+                    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
+                        true))
+            .UseSerilog((hostContext, loggerConfiguration) =>
+                loggerConfiguration.ReadFrom.Configuration(hostContext.Configuration));
     }
 }

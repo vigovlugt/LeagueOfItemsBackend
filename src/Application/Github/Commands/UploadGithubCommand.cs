@@ -9,73 +9,72 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Octokit;
 
-namespace LeagueOfItems.Application.Github.Commands
+namespace LeagueOfItems.Application.Github.Commands;
+
+public record UploadGithubCommand(Dataset Dataset) : IRequest;
+
+public class UploadGithubCommandHandler : IRequestHandler<UploadGithubCommand>
 {
-    public record UploadGithubCommand(Dataset Dataset) : IRequest;
+    private readonly ILogger<UploadGithubCommandHandler> _logger;
+    private readonly GitHubClient _client;
+    private readonly JsonSerializerOptions _jsonSerializerOptions;
 
-    public class UploadGithubCommandHandler : IRequestHandler<UploadGithubCommand>
+    private readonly string _repository;
+    private readonly string _owner;
+    private readonly string _path;
+    private readonly string _fileName;
+
+    public UploadGithubCommandHandler(ILogger<UploadGithubCommandHandler> logger,
+        IConfiguration configuration)
     {
-        private readonly ILogger<UploadGithubCommandHandler> _logger;
-        private readonly GitHubClient _client;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
+        _logger = logger;
 
-        private readonly string _repository;
-        private readonly string _owner;
-        private readonly string _path;
-        private readonly string _fileName;
-
-        public UploadGithubCommandHandler(ILogger<UploadGithubCommandHandler> logger,
-            IConfiguration configuration)
+        _client = new GitHubClient(new ProductHeaderValue("LeagueOfItems"))
         {
-            _logger = logger;
+            Credentials = new Credentials(configuration["Github:Token"])
+        };
 
-            _client = new GitHubClient(new ProductHeaderValue("LeagueOfItems"))
-            {
-                Credentials = new Credentials(configuration["Github:Token"])
-            };
-
-            _jsonSerializerOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            _repository = configuration["Github:Repository"];
-            _owner = configuration["Github:Owner"];
-            _path = configuration["Github:Path"];
-            _fileName = configuration["Github:FileName"];
-        }
-
-        public async Task<Unit> Handle(UploadGithubCommand request, CancellationToken cancellationToken)
+        _jsonSerializerOptions = new JsonSerializerOptions
         {
-            _logger.LogInformation("Uploading dataset to frontend Github");
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
-            var json = JsonSerializer.Serialize(request.Dataset, _jsonSerializerOptions);
-            var sha = await GetGithubDatasetSha();
+        _repository = configuration["Github:Repository"];
+        _owner = configuration["Github:Owner"];
+        _path = configuration["Github:Path"];
+        _fileName = configuration["Github:FileName"];
+    }
 
-            await UploadDataset(json, sha);
+    public async Task<Unit> Handle(UploadGithubCommand request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Uploading dataset to frontend Github");
 
-            _logger.LogInformation("Dataset uploaded");
+        var json = JsonSerializer.Serialize(request.Dataset, _jsonSerializerOptions);
+        var sha = await GetGithubDatasetSha();
 
-            return Unit.Value;
-        }
+        await UploadDataset(json, sha);
 
-        private async Task UploadDataset(string json, string sha)
-        {
-            var updateFileRequest = new UpdateFileRequest("Update League of Items dataset", json, sha);
+        _logger.LogInformation("Dataset uploaded");
 
-            await _client.Repository.Content.UpdateFile(_owner, _repository, Path.Join(_path, _fileName),
-                updateFileRequest);
-        }
+        return Unit.Value;
+    }
 
-        private async Task<string> GetGithubDatasetSha()
-        {
-            var contents = await _client.Repository.Content.GetAllContents(_owner, _repository, _path);
+    private async Task UploadDataset(string json, string sha)
+    {
+        var updateFileRequest = new UpdateFileRequest("Update League of Items dataset", json, sha);
 
-            var content = contents.Single(c => c.Name == _fileName);
+        await _client.Repository.Content.UpdateFile(_owner, _repository, Path.Join(_path, _fileName),
+            updateFileRequest);
+    }
 
-            _logger.LogInformation("Got Dataset Github SHA {Sha}", content.Sha);
+    private async Task<string> GetGithubDatasetSha()
+    {
+        var contents = await _client.Repository.Content.GetAllContents(_owner, _repository, _path);
 
-            return content.Sha;
-        }
+        var content = contents.Single(c => c.Name == _fileName);
+
+        _logger.LogInformation("Got Dataset Github SHA {Sha}", content.Sha);
+
+        return content.Sha;
     }
 }

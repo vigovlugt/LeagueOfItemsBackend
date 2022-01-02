@@ -6,6 +6,7 @@ using LeagueOfItems.Application.Champions.Queries;
 using LeagueOfItems.Application.Champions.Services;
 using LeagueOfItems.Application.Items.Queries;
 using LeagueOfItems.Application.Items.Services;
+using LeagueOfItems.Application.Patches.Queries;
 using LeagueOfItems.Application.Runes.Queries;
 using LeagueOfItems.Application.Runes.Services;
 using LeagueOfItems.Application.Ugg.Helpers;
@@ -14,53 +15,55 @@ using LeagueOfItems.Domain.Models.Datasets;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace LeagueOfItems.Application.Datasets.Query
+namespace LeagueOfItems.Application.Datasets.Query;
+
+public record GetDatasetCommand : IRequest<Dataset>;
+
+public class GetDatasetCommandHandler : IRequestHandler<GetDatasetCommand, Dataset>
 {
-    public record GetDatasetCommand : IRequest<Dataset>;
+    private readonly ILogger<GetDatasetCommandHandler> _logger;
+    private readonly IMediator _mediator;
 
-    public class GetDatasetCommandHandler : IRequestHandler<GetDatasetCommand, Dataset>
+    public GetDatasetCommandHandler(IMediator mediator, ILogger<GetDatasetCommandHandler> logger)
     {
-        private readonly ILogger<GetDatasetCommandHandler> _logger;
-        private readonly IMediator _mediator;
+        _mediator = mediator;
+        _logger = logger;
+    }
 
-        public GetDatasetCommandHandler(IMediator mediator, ILogger<GetDatasetCommandHandler> logger)
+    public async Task<Dataset> Handle(GetDatasetCommand request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Getting Dataset as JSON");
+        var patch = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
+        var previousPatch = LolVersionHelper.GetPreviousVersion(patch);
+
+        _logger.LogInformation("Getting all Items");
+        var itemStats = await _mediator.Send(new GetAllItemsQuery(patch), cancellationToken);
+        var previousItemStats = await _mediator.Send(new GetAllItemsQuery(previousPatch), cancellationToken);
+        PreviousItemStatsService.SetPreviousItemStats(itemStats, previousItemStats);
+
+        _logger.LogInformation("Getting all Runes");
+        var runeStats = await _mediator.Send(new GetAllRunesQuery(patch), cancellationToken);
+        var previousRuneStats = await _mediator.Send(new GetAllRunesQuery(previousPatch), cancellationToken);
+        PreviousRuneStatsService.SetPreviousRuneStats(runeStats, previousRuneStats);
+
+        _logger.LogInformation("Getting all Champions");
+        var championStats = await _mediator.Send(new GetAllChampionsQuery(patch), cancellationToken);
+        var previousChampionStats = await _mediator.Send(new GetAllChampionsQuery(previousPatch), cancellationToken);
+        PreviousChampionStatsService.SetPreviousChampionStats(championStats, previousChampionStats);
+
+        var patchSchedule = await _mediator.Send(new GetPatchScheduleQuery(), cancellationToken);
+
+        var dataset = new Dataset
         {
-            _mediator = mediator;
-            _logger = logger;
-        }
+            Items = itemStats,
+            Runes = runeStats,
+            Champions = championStats,
+            Version = patch,
+            ChampionMatches = championStats.Sum(s => s.Matches),
+            PreviousChampionMatches = previousChampionStats.Sum(s => s.Matches),
+            PatchSchedule = patchSchedule
+        };
 
-        public async Task<Dataset> Handle(GetDatasetCommand request, CancellationToken cancellationToken)
-        {
-            _logger.LogInformation("Getting Dataset as JSON");
-            var patch = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
-            var previousPatch = LolVersionHelper.GetPreviousVersion(patch);
-
-            _logger.LogInformation("Getting all Items");
-            var itemStats = await _mediator.Send(new GetAllItemsQuery(patch), cancellationToken);
-            var previousItemStats = await _mediator.Send(new GetAllItemsQuery(previousPatch), cancellationToken);
-            PreviousItemStatsService.SetPreviousItemStats(itemStats, previousItemStats);
-
-            _logger.LogInformation("Getting all Runes");
-            var runeStats = await _mediator.Send(new GetAllRunesQuery(patch), cancellationToken);
-            var previousRuneStats = await _mediator.Send(new GetAllRunesQuery(previousPatch), cancellationToken);
-            PreviousRuneStatsService.SetPreviousRuneStats(runeStats, previousRuneStats);
-
-            _logger.LogInformation("Getting all Champions");
-            var championStats = await _mediator.Send(new GetAllChampionsQuery(patch), cancellationToken);
-            var previousChampionStats = await _mediator.Send(new GetAllChampionsQuery(previousPatch), cancellationToken);
-            PreviousChampionStatsService.SetPreviousChampionStats(championStats, previousChampionStats);
-
-            var dataset = new Dataset
-            {
-                Items = itemStats,
-                Runes = runeStats,
-                Champions = championStats,
-                Version = patch,
-                ChampionMatches = championStats.Sum(s => s.Matches),
-                PreviousChampionMatches = previousChampionStats.Sum(s => s.Matches),
-            };
-
-            return dataset;
-        }
+        return dataset;
     }
 }

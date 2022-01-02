@@ -1,7 +1,6 @@
-namespace LeagueOfItems.Application.Datasets.Services
+namespace LeagueOfItems.Application.Datasets.Services;
+
+public class DatasetService
 {
-    public class DatasetService
-    {
         
-    }
 }

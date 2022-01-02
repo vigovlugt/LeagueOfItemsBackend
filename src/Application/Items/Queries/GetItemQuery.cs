@@ -6,36 +6,35 @@ using LeagueOfItems.Domain.Models.Items;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace LeagueOfItems.Application.Items.Queries
-{
-    public record GetItemQuery : IRequest<ItemStats>
-    {
-        public GetItemQuery(int id)
-        {
-            Id = id;
-        }
+namespace LeagueOfItems.Application.Items.Queries;
 
-        public int Id { get; init; }
+public record GetItemQuery : IRequest<ItemStats>
+{
+    public GetItemQuery(int id)
+    {
+        Id = id;
     }
 
-    public class GetItemQueryHandler : IRequestHandler<GetItemQuery, ItemStats>
+    public int Id { get; init; }
+}
+
+public class GetItemQueryHandler : IRequestHandler<GetItemQuery, ItemStats>
+{
+    private readonly IApplicationDbContext _context;
+
+    public GetItemQueryHandler(IApplicationDbContext context)
     {
-        private readonly IApplicationDbContext _context;
+        _context = context;
+    }
 
-        public GetItemQueryHandler(IApplicationDbContext context)
-        {
-            _context = context;
-        }
+    public async Task<ItemStats> Handle(GetItemQuery request, CancellationToken cancellationToken)
+    {
+        var item = await _context.Items
+            .Include(i => i.ItemData)
+            .ThenInclude(i => i.Champion)
+            .Where(i => i.ItemData.Count != 0)
+            .SingleAsync(i => i.Id == request.Id, cancellationToken);
 
-        public async Task<ItemStats> Handle(GetItemQuery request, CancellationToken cancellationToken)
-        {
-            var item = await _context.Items
-                .Include(i => i.ItemData)
-                .ThenInclude(i => i.Champion)
-                .Where(i => i.ItemData.Count != 0)
-                .SingleAsync(i => i.Id == request.Id, cancellationToken);
-
-            return new ItemStats(item);
-        }
+        return new ItemStats(item);
     }
 }

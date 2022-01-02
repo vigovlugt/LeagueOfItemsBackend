@@ -6,42 +6,41 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace LeagueOfItems.Application.Riot.Queries
+namespace LeagueOfItems.Application.Riot.Queries;
+
+public record GetRiotVersionsQuery : IRequest<List<string>>;
+
+public class GetRiotVersionsQueryHandler : IRequestHandler<GetRiotVersionsQuery, List<string>>
 {
-    public record GetRiotVersionsQuery : IRequest<List<string>>;
+    private readonly IMediator _mediator;
+    private readonly ILogger<GetRiotVersionsQueryHandler> _logger;
 
-    public class GetRiotVersionsQueryHandler : IRequestHandler<GetRiotVersionsQuery, List<string>>
+    public GetRiotVersionsQueryHandler(IMediator mediator, ILogger<GetRiotVersionsQueryHandler> logger)
     {
-        private readonly IMediator _mediator;
-        private readonly ILogger<GetRiotVersionsQueryHandler> _logger;
+        _mediator = mediator;
+        _logger = logger;
+    }
 
-        public GetRiotVersionsQueryHandler(IMediator mediator, ILogger<GetRiotVersionsQueryHandler> logger)
+    public async Task<List<string>> Handle(GetRiotVersionsQuery request, CancellationToken cancellationToken)
+    {
+        var versions = await GetRiotVersionResponse(cancellationToken);
+
+        return versions;
+    }
+
+    private async Task<List<string>> GetRiotVersionResponse(CancellationToken cancellationToken)
+    {
+        var responseStream = await _mediator.Send(new GetRiotApiResponse
         {
-            _mediator = mediator;
-            _logger = logger;
-        }
+            Url = "api/versions.json"
+        }, cancellationToken);
 
-        public async Task<List<string>> Handle(GetRiotVersionsQuery request, CancellationToken cancellationToken)
-        {
-            var versions = await GetRiotVersionResponse(cancellationToken);
+        var versions =
+            await JsonSerializer.DeserializeAsync<List<string>>(responseStream,
+                cancellationToken: cancellationToken);
 
-            return versions;
-        }
+        if (versions == null || versions.Count == 0) throw new Exception("No LOL version found");
 
-        private async Task<List<string>> GetRiotVersionResponse(CancellationToken cancellationToken)
-        {
-            var responseStream = await _mediator.Send(new GetRiotApiResponse
-            {
-                Url = "api/versions.json"
-            }, cancellationToken);
-
-            var versions =
-                await JsonSerializer.DeserializeAsync<List<string>>(responseStream,
-                    cancellationToken: cancellationToken);
-
-            if (versions == null || versions.Count == 0) throw new Exception("No LOL version found");
-
-            return versions;
-        }
+        return versions;
     }
 }

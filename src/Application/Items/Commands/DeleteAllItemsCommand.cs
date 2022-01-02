@@ -5,28 +5,27 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace LeagueOfItems.Application.Items.Commands
+namespace LeagueOfItems.Application.Items.Commands;
+
+public record DeleteAllItemsCommand : IRequest;
+
+public class DeleteAllItemsCommandHandler : IRequestHandler<DeleteAllItemsCommand>
 {
-    public record DeleteAllItemsCommand : IRequest;
+    private readonly IApplicationDbContext _context;
+    private readonly ILogger<DeleteAllItemsCommandHandler> _logger;
 
-    public class DeleteAllItemsCommandHandler : IRequestHandler<DeleteAllItemsCommand>
+    public DeleteAllItemsCommandHandler(IApplicationDbContext context, ILogger<DeleteAllItemsCommandHandler> logger)
     {
-        private readonly IApplicationDbContext _context;
-        private readonly ILogger<DeleteAllItemsCommandHandler> _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public DeleteAllItemsCommandHandler(IApplicationDbContext context, ILogger<DeleteAllItemsCommandHandler> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+    public async Task<Unit> Handle(DeleteAllItemsCommand request, CancellationToken cancellationToken)
+    {
+        var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM Items;", cancellationToken);
 
-        public async Task<Unit> Handle(DeleteAllItemsCommand request, CancellationToken cancellationToken)
-        {
-            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM Items;", cancellationToken);
-
-            _logger.LogInformation("{ItemAmount} Items deleted", deleted);
+        _logger.LogInformation("{ItemAmount} Items deleted", deleted);
             
-            return Unit.Value;
-        }
+        return Unit.Value;
     }
 }

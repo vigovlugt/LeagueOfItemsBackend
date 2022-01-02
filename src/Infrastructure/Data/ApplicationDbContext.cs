@@ -9,58 +9,57 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace LeagueOfItems.Infrastructure.Data
+namespace LeagueOfItems.Infrastructure.Data;
+
+public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
-    public class ApplicationDbContext : DbContext, IApplicationDbContext
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-        {
-        }
+    }
 
-        public DbSet<Item> Items { get; set; }
-        public DbSet<Champion> Champions { get; set; }
+    public DbSet<Item> Items { get; set; }
+    public DbSet<Champion> Champions { get; set; }
 
-        public DbSet<RunePath> RunePaths { get; set; }
-        public DbSet<Rune> Runes { get; set; }
+    public DbSet<RunePath> RunePaths { get; set; }
+    public DbSet<Rune> Runes { get; set; }
         
-        public DbSet<ItemData> ItemData { get; set; }
-        public DbSet<RuneData> RuneData { get; set; }
-        public DbSet<ChampionData> ChampionData { get; set; }
-        public DbSet<BuildPathData> BuildPathData { get; set; }
+    public DbSet<ItemData> ItemData { get; set; }
+    public DbSet<RuneData> RuneData { get; set; }
+    public DbSet<ChampionData> ChampionData { get; set; }
+    public DbSet<BuildPathData> BuildPathData { get; set; }
 
-        public Task<int> SaveChangesAsync()
-        {
-            return base.SaveChangesAsync();
-        }
+    public Task<int> SaveChangesAsync()
+    {
+        return base.SaveChangesAsync();
+    }
 
-        public new DatabaseFacade Database => base.Database;
+    public new DatabaseFacade Database => base.Database;
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlite("Filename=../../data.db",
-                b => b
-                    .MigrationsAssembly("LeagueOfItems.ConsoleApp")
-                    .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
-        }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.UseSqlite("Filename=../../data.db",
+            b => b
+                .MigrationsAssembly("LeagueOfItems.ConsoleApp")
+                .UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
+    }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<RunePath>()
-                .HasMany(p => p.Runes)
-                .WithOne(b => b.RunePath)
-                .IsRequired();
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<RunePath>()
+            .HasMany(p => p.Runes)
+            .WithOne(b => b.RunePath)
+            .IsRequired();
             
-            modelBuilder.Entity<ItemData>()
-                .HasKey(i => new {i.ItemId, i.ChampionId, i.Rank, i.Order, i.Region, i.Role, i.Patch});
+        modelBuilder.Entity<ItemData>()
+            .HasKey(i => new {i.ItemId, i.ChampionId, i.Rank, i.Order, i.Region, i.Role, i.Patch});
 
-            modelBuilder.Entity<RuneData>()
-                .HasKey(i => new {i.RuneId, i.ChampionId, i.Rank, i.Tier, i.Region, i.Role, i.Patch});
+        modelBuilder.Entity<RuneData>()
+            .HasKey(i => new {i.RuneId, i.ChampionId, i.Rank, i.Tier, i.Region, i.Role, i.Patch});
 
-            modelBuilder.Entity<ChampionData>()
-                .HasKey(i => new {i.ChampionId, i.Rank, i.Region, i.Role, i.Patch});
+        modelBuilder.Entity<ChampionData>()
+            .HasKey(i => new {i.ChampionId, i.Rank, i.Region, i.Role, i.Patch});
             
-            modelBuilder.Entity<BuildPathData>()
-                .HasKey(i => new {i.ChampionId, i.Item1Id, i.Item2Id, i.Item3Id, i.Rank, i.Region, i.Role, i.Patch});
-        }
+        modelBuilder.Entity<BuildPathData>()
+            .HasKey(i => new {i.ChampionId, i.Item1Id, i.Item2Id, i.Item3Id, i.Rank, i.Region, i.Role, i.Patch});
     }
 }

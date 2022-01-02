@@ -11,70 +11,69 @@ using LeagueOfItems.Domain.Models.Riot;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace LeagueOfItems.Application.Items.Commands
+namespace LeagueOfItems.Application.Items.Commands;
+
+public record GetRiotItemDataCommand(string Version) : IRequest<List<Item>>;
+
+public class GetRiotItemDataCommandHandler : IRequestHandler<GetRiotItemDataCommand, List<Item>>
 {
-    public record GetRiotItemDataCommand(string Version) : IRequest<List<Item>>;
+    private readonly IMediator _mediator;
+    private readonly IApplicationDbContext _context;
+    private readonly ILogger<GetRiotItemDataCommandHandler> _logger;
 
-    public class GetRiotItemDataCommandHandler : IRequestHandler<GetRiotItemDataCommand, List<Item>>
+    public GetRiotItemDataCommandHandler(IMediator mediator, IApplicationDbContext context,
+        ILogger<GetRiotItemDataCommandHandler> logger)
     {
-        private readonly IMediator _mediator;
-        private readonly IApplicationDbContext _context;
-        private readonly ILogger<GetRiotItemDataCommandHandler> _logger;
+        _mediator = mediator;
+        _context = context;
+        _logger = logger;
+    }
 
-        public GetRiotItemDataCommandHandler(IMediator mediator, IApplicationDbContext context,
-            ILogger<GetRiotItemDataCommandHandler> logger)
+    public async Task<List<Item>> Handle(GetRiotItemDataCommand request, CancellationToken cancellationToken)
+    {
+        var itemResponse = await GetRiotItemResponse(request.Version);
+
+        var items = ParseRiotItems(itemResponse);
+
+        _logger.LogInformation("{ItemAmount} items found", items.Count);
+
+        await SaveItems(items);
+
+        return items;
+    }
+
+    private async Task<RiotItemResponse> GetRiotItemResponse(string version)
+    {
+        var responseStream = await _mediator.Send(new GetRiotApiResponse
         {
-            _mediator = mediator;
-            _context = context;
-            _logger = logger;
-        }
+            Url = $"cdn/{version}/data/en_US/item.json"
+        });
 
-        public async Task<List<Item>> Handle(GetRiotItemDataCommand request, CancellationToken cancellationToken)
-        {
-            var itemResponse = await GetRiotItemResponse(request.Version);
-
-            var items = ParseRiotItems(itemResponse);
-
-            _logger.LogInformation("{ItemAmount} items found", items.Count);
-
-            await SaveItems(items);
-
-            return items;
-        }
-
-        private async Task<RiotItemResponse> GetRiotItemResponse(string version)
-        {
-            var responseStream = await _mediator.Send(new GetRiotApiResponse
+        var itemResponse = await JsonSerializer.DeserializeAsync<RiotItemResponse>(responseStream,
+            new JsonSerializerOptions
             {
-                Url = $"cdn/{version}/data/en_US/item.json"
+                PropertyNameCaseInsensitive = true
             });
+        if (itemResponse == null) throw new ArgumentException("LOL items endpoint returned null");
 
-            var itemResponse = await JsonSerializer.DeserializeAsync<RiotItemResponse>(responseStream,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-            if (itemResponse == null) throw new ArgumentException("LOL items endpoint returned null");
+        return itemResponse;
+    }
 
-            return itemResponse;
-        }
+    private async Task SaveItems(List<Item> items)
+    {
+        var existing = _context.Items.Where(c => items.Select(i => i.Id).Contains(c.Id)).ToList();
+        _context.Items.RemoveRange(existing);
+        _context.Items.AddRange(items);
 
-        private async Task SaveItems(List<Item> items)
-        {
-            var existing = _context.Items.Where(c => items.Select(i => i.Id).Contains(c.Id)).ToList();
-            _context.Items.RemoveRange(existing);
-            _context.Items.AddRange(items);
+        await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("{ItemAmount} items saved", items.Count);
-        }
+        _logger.LogInformation("{ItemAmount} items saved", items.Count);
+    }
         
-        private static List<Item> ParseRiotItems(RiotItemResponse itemResponse)
-        {
-            foreach (var (id, item) in itemResponse.Data) item.Id = id;
+    private static List<Item> ParseRiotItems(RiotItemResponse itemResponse)
+    {
+        foreach (var (id, item) in itemResponse.Data) item.Id = id;
 
-            return itemResponse.Data.Values.Select(Item.FromRiotItem).ToList();
-        }
+        return itemResponse.Data.Values.Select(Item.FromRiotItem).ToList();
     }
 }

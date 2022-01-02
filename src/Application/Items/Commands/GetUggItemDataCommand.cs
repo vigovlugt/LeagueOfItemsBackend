@@ -12,71 +12,70 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace LeagueOfItems.Application.Items.Commands
+namespace LeagueOfItems.Application.Items.Commands;
+
+public record GetUggItemDataCommand(string Version) : IRequest<List<ItemData>>;
+
+public class GetUggItemDataCommandHandler : IRequestHandler<GetUggItemDataCommand, List<ItemData>>
 {
-    public record GetUggItemDataCommand(string Version) : IRequest<List<ItemData>>;
+    private readonly IApplicationDbContext _context;
+    private readonly ILogger<GetUggItemDataCommandHandler> _logger;
+    private readonly IMediator _mediator;
 
-    public class GetUggItemDataCommandHandler : IRequestHandler<GetUggItemDataCommand, List<ItemData>>
+    public GetUggItemDataCommandHandler(ILogger<GetUggItemDataCommandHandler> logger, IApplicationDbContext context,
+        IMediator mediator)
     {
-        private readonly IApplicationDbContext _context;
-        private readonly ILogger<GetUggItemDataCommandHandler> _logger;
-        private readonly IMediator _mediator;
+        _logger = logger;
+        _context = context;
+        _mediator = mediator;
+    }
 
-        public GetUggItemDataCommandHandler(ILogger<GetUggItemDataCommandHandler> logger, IApplicationDbContext context,
-            IMediator mediator)
+    public async Task<List<ItemData>> Handle(GetUggItemDataCommand request, CancellationToken cancellationToken)
+    {
+        var champions = await _context.Champions.ToListAsync(cancellationToken);
+
+        var itemDataLists = champions.Select(champion => GetItemDataForChampion(request.Version, champion))
+            .ToList();
+
+        await Task.WhenAll(itemDataLists);
+
+        var itemData = itemDataLists.SelectMany(x => x.Result).ToList();
+
+        await SaveItemData(itemData);
+
+        return itemData;
+    }
+
+    private async Task<List<ItemData>> GetItemDataForChampion(string version, Champion champion)
+    {
+        _logger.LogInformation("Downloading Item data for {Champion} Version: {Version}", champion.Name, version);
+
+        await using var responseStream = await _mediator.Send(new GetUggApiResponse
         {
-            _logger = logger;
-            _context = context;
-            _mediator = mediator;
+            ChampionId = champion.Id,
+            Type = "items",
+            Version = version
+        });
+
+        if (responseStream == null)
+        {
+            _logger.LogWarning("No Ugg response for ItemData for Champion {Champion}", champion.Name);
+            return new List<ItemData>();
         }
 
-        public async Task<List<ItemData>> Handle(GetUggItemDataCommand request, CancellationToken cancellationToken)
-        {
-            var champions = await _context.Champions.ToListAsync(cancellationToken);
+        var parsedItemData = await UggItemDataParser.Parse(champion.Id, responseStream, version);
 
-            var itemDataLists = champions.Select(champion => GetItemDataForChampion(request.Version, champion))
-                .ToList();
+        var filteredItemData = UggDataFilterer.Filter(parsedItemData);
 
-            await Task.WhenAll(itemDataLists);
+        return filteredItemData;
+    }
 
-            var itemData = itemDataLists.SelectMany(x => x.Result).ToList();
+    private async Task SaveItemData(List<ItemData> itemData)
+    {
+        _context.ItemData.AddRange(itemData);
 
-            await SaveItemData(itemData);
+        await _context.SaveChangesAsync();
 
-            return itemData;
-        }
-
-        private async Task<List<ItemData>> GetItemDataForChampion(string version, Champion champion)
-        {
-            _logger.LogInformation("Downloading Item data for {Champion} Version: {Version}", champion.Name, version);
-
-            await using var responseStream = await _mediator.Send(new GetUggApiResponse
-            {
-                ChampionId = champion.Id,
-                Type = "items",
-                Version = version
-            });
-
-            if (responseStream == null)
-            {
-                _logger.LogWarning("No Ugg response for ItemData for Champion {Champion}", champion.Name);
-                return new List<ItemData>();
-            }
-
-            var parsedItemData = await UggItemDataParser.Parse(champion.Id, responseStream, version);
-
-            var filteredItemData = UggDataFilterer.Filter(parsedItemData);
-
-            return filteredItemData;
-        }
-
-        private async Task SaveItemData(List<ItemData> itemData)
-        {
-            _context.ItemData.AddRange(itemData);
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("{ItemDataAmount} ItemData rows saved", itemData.Count);
-        }
+        _logger.LogInformation("{ItemDataAmount} ItemData rows saved", itemData.Count);
     }
 }

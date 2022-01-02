@@ -5,29 +5,28 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace LeagueOfItems.Application.Champions.Commands
+namespace LeagueOfItems.Application.Champions.Commands;
+
+public record DeleteAllChampionsCommand : IRequest;
+
+public class DeleteAllChampionsCommandHandler : IRequestHandler<DeleteAllChampionsCommand>
 {
-    public record DeleteAllChampionsCommand : IRequest;
+    private readonly IApplicationDbContext _context;
+    private readonly ILogger<DeleteAllChampionsCommandHandler> _logger;
 
-    public class DeleteAllChampionsCommandHandler : IRequestHandler<DeleteAllChampionsCommand>
+    public DeleteAllChampionsCommandHandler(IApplicationDbContext context,
+        ILogger<DeleteAllChampionsCommandHandler> logger)
     {
-        private readonly IApplicationDbContext _context;
-        private readonly ILogger<DeleteAllChampionsCommandHandler> _logger;
+        _context = context;
+        _logger = logger;
+    }
 
-        public DeleteAllChampionsCommandHandler(IApplicationDbContext context,
-            ILogger<DeleteAllChampionsCommandHandler> logger)
-        {
-            _context = context;
-            _logger = logger;
-        }
+    public async Task<Unit> Handle(DeleteAllChampionsCommand request, CancellationToken cancellationToken)
+    {
+        var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM Champions;", cancellationToken);
 
-        public async Task<Unit> Handle(DeleteAllChampionsCommand request, CancellationToken cancellationToken)
-        {
-            var deleted = await _context.Database.ExecuteSqlRawAsync("DELETE FROM Champions;", cancellationToken);
+        _logger.LogInformation("{ChampionAmount} champions deleted", deleted);
 
-            _logger.LogInformation("{ChampionAmount} champions deleted", deleted);
-
-            return Unit.Value;
-        }
+        return Unit.Value;
     }
 }

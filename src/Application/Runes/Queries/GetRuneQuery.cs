@@ -6,32 +6,31 @@ using LeagueOfItems.Domain.Models.Runes;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace LeagueOfItems.Application.Runes.Queries
+namespace LeagueOfItems.Application.Runes.Queries;
+
+public record GetRuneQuery : IRequest<RuneStats>
 {
-    public record GetRuneQuery : IRequest<RuneStats>
+    public int Id { get; init; }
+}
+
+public class GetRuneQueryHandler : IRequestHandler<GetRuneQuery, RuneStats>
+{
+    private readonly IApplicationDbContext _context;
+
+    public GetRuneQueryHandler(IApplicationDbContext context)
     {
-        public int Id { get; init; }
+        _context = context;
     }
 
-    public class GetRuneQueryHandler : IRequestHandler<GetRuneQuery, RuneStats>
+    public async Task<RuneStats> Handle(GetRuneQuery request, CancellationToken cancellationToken)
     {
-        private readonly IApplicationDbContext _context;
+        var rune = await _context.Runes
+            .Include(r => r.RunePath)
+            .Include(r => r.RuneData)
+            .ThenInclude(i => i.Champion)
+            .Where(i => i.RuneData.Count != 0)
+            .SingleAsync(i => i.Id == request.Id, cancellationToken);
 
-        public GetRuneQueryHandler(IApplicationDbContext context)
-        {
-            _context = context;
-        }
-
-        public async Task<RuneStats> Handle(GetRuneQuery request, CancellationToken cancellationToken)
-        {
-            var rune = await _context.Runes
-                .Include(r => r.RunePath)
-                .Include(r => r.RuneData)
-                .ThenInclude(i => i.Champion)
-                .Where(i => i.RuneData.Count != 0)
-                .SingleAsync(i => i.Id == request.Id, cancellationToken);
-
-            return new RuneStats(rune);
-        }
+        return new RuneStats(rune);
     }
 }

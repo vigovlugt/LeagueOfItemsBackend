@@ -6,30 +6,29 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 
-namespace LeagueOfItems.Application.Riot.Queries
+namespace LeagueOfItems.Application.Riot.Queries;
+
+public record GetRiotApiResponse : IRequest<Stream>
 {
-    public record GetRiotApiResponse : IRequest<Stream>
+    public string Url { get; init; }
+}
+
+public class GetRiotApiResponseHandler : IRequestHandler<GetRiotApiResponse, Stream>
+{
+    private readonly HttpClient _client;
+
+    public GetRiotApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration)
     {
-        public string Url { get; init; }
+        _client = clientFactory.CreateClient();
+        _client.BaseAddress = new Uri(configuration["Riot:ApiUrl"]);
     }
 
-    public class GetRiotApiResponseHandler : IRequestHandler<GetRiotApiResponse, Stream>
+    public async Task<Stream> Handle(GetRiotApiResponse request, CancellationToken cancellationToken)
     {
-        private readonly HttpClient _client;
+        var response = await _client.GetAsync(request.Url, cancellationToken);
 
-        public GetRiotApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration)
-        {
-            _client = clientFactory.CreateClient();
-            _client.BaseAddress = new Uri(configuration["Riot:ApiUrl"]);
-        }
+        response.EnsureSuccessStatusCode();
 
-        public async Task<Stream> Handle(GetRiotApiResponse request, CancellationToken cancellationToken)
-        {
-            var response = await _client.GetAsync(request.Url, cancellationToken);
-
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content.ReadAsStreamAsync(cancellationToken);
-        }
+        return await response.Content.ReadAsStreamAsync(cancellationToken);
     }
 }
