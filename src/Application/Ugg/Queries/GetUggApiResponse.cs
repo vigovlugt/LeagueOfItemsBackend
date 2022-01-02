@@ -28,6 +28,7 @@ namespace LeagueOfItems.Application.Ugg.Queries
             _logger = logger;
             _client = clientFactory.CreateClient();
             _client.BaseAddress = new Uri(configuration["Ugg:ApiUrl"]);
+            _client.Timeout = TimeSpan.FromMinutes(3);
         }
 
         public async Task<Stream> Handle(GetUggApiResponse request, CancellationToken cancellationToken)
