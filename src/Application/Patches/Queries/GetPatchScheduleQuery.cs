@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
@@ -15,6 +16,16 @@ namespace LeagueOfItems.Application.Patches.Queries;
 
 public record GetPatchScheduleQuery : IRequest<List<ScheduledPatch>>;
 
+record ZendeskApiResponse
+{
+    public ZendeskApiArticle Article { get; set; }
+}
+
+record ZendeskApiArticle
+{
+    public string Body { get; set; }
+}
+
 public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuery, List<ScheduledPatch>>
 {
     private readonly HttpClient _client;
@@ -24,7 +35,6 @@ public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuer
     public GetPatchScheduleQueryHandler(ILogger<GetPatchScheduleQueryHandler> logger, IHttpClientFactory clientFactory, IConfiguration configuration)
     {
         _client = clientFactory.CreateClient();
-        _client.DefaultRequestHeaders.UserAgent.ParseAdd("LeagueOfItems");
         _logger = logger;
         _patchScheduleUri = new Uri(configuration["Riot:PatchScheduleUrl"]);
     }
@@ -33,13 +43,17 @@ public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuer
     {
         _logger.LogInformation("Getting Patch Schedule from {PatchScheduleUrl}", _patchScheduleUri.ToString());
         var response = await _client.GetAsync(_patchScheduleUri, cancellationToken);
-
         response.EnsureSuccessStatusCode();
         
-        var doc = new HtmlDocument();
-        doc.LoadHtml(await response.Content.ReadAsStringAsync(cancellationToken));
+        var json = await JsonSerializer.DeserializeAsync<ZendeskApiResponse>(await response.Content.ReadAsStreamAsync(cancellationToken), new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        }, cancellationToken);
 
-        var tableRows = doc.DocumentNode.SelectNodes("//*[@id=\"top\"]/table/tbody/tr");
+        var doc = new HtmlDocument();
+        doc.LoadHtml(json.Article.Body);
+
+        var tableRows = doc.DocumentNode.SelectNodes("//table/tbody/tr");
 
         return tableRows.Select(r =>
         {
