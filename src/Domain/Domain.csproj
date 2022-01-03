@@ -6,4 +6,8 @@
         <AssemblyName>LeagueOfItems.Domain</AssemblyName>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MongoDB.Bson" Version="2.14.1" />
+    </ItemGroup>
+
 </Project>

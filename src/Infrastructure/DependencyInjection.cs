@@ -1,5 +1,6 @@
 using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Infrastructure.Data;
+using LeagueOfItems.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LeagueOfItems.Infrastructure;
@@ -10,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<ApplicationDbContext>();
         services.AddScoped<IApplicationDbContext>(provider => provider.GetService<ApplicationDbContext>());
+        services.AddScoped<IPageViewRepository, PageViewRepository>();
 
         return services;
     }

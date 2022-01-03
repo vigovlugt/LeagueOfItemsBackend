@@ -55,12 +55,6 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
             {
                 _logger.LogWarning("Retrying UGG API Request {Url} Try {Try}", _client.BaseAddress + requestUri, tries);
             }
-            catch (Exception e)
-            {
-                _logger.LogError("{Exception}", e);
-                shortCircuit = true;
-            }
-            
         }
         while (!success && tries < 3 && !shortCircuit);
 

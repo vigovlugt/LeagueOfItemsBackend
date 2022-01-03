@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using LeagueOfItems.Domain.Models.Champions;
 using LeagueOfItems.Domain.Models.Common;
 using LeagueOfItems.Domain.Models.Items;
+using LeagueOfItems.Domain.Models.PageViews;
 using LeagueOfItems.Domain.Models.Patches;
 using LeagueOfItems.Domain.Models.Runes;
 
@@ -17,6 +18,7 @@ public class Dataset
     public int ChampionMatches { get; set; }
     public int PreviousChampionMatches { get; set; }
 
+    public PageViewDataset PageView { get; set; }
     public List<ScheduledPatch> PatchSchedule { get; set; }
 
     public DateTime Date { get; set; } = DateTime.Now;

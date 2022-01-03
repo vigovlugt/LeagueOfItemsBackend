@@ -28,11 +28,11 @@ public class Program
             })
             .ConfigureAppConfiguration(config =>
                 config
-                    .AddUserSecrets<Program>(true)
-                    .AddEnvironmentVariables()
                     .AddJsonFile("appsettings.json")
                     .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",
-                        true))
+                        true)
+                    .AddUserSecrets<Program>(true)
+                    .AddEnvironmentVariables())
             .UseSerilog((hostContext, loggerConfiguration) =>
                 loggerConfiguration.ReadFrom.Configuration(hostContext.Configuration));
     }
