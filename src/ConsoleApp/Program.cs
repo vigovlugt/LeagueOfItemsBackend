@@ -28,7 +28,7 @@ public class Program
             })
             .ConfigureAppConfiguration(config =>
                 config
-                    .AddUserSecrets<Program>()
+                    .AddUserSecrets<Program>(true)
                     .AddEnvironmentVariables()
                     .AddJsonFile("appsettings.json")
                     .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json",

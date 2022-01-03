@@ -1,6 +1,7 @@
 using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration.UserSecrets;
 
 namespace LeagueOfItems.Infrastructure;
 
