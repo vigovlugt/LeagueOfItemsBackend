@@ -64,6 +64,8 @@ public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuer
 
     private static DateTime ParseDateString(string dateString)
     {
+        dateString = dateString.Replace("Sept", "Sep");
+        
         return DateTime.Parse(string.Join(" ", dateString.Split(",").Select(x => x.Trim()).Skip(1)));
     }
 }

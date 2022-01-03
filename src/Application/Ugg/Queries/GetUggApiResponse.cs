@@ -28,7 +28,7 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         _logger = logger;
         _client = clientFactory.CreateClient();
         _client.BaseAddress = new Uri(configuration["Ugg:ApiUrl"]);
-        _client.Timeout = TimeSpan.FromMinutes(5);
+        _client.Timeout = TimeSpan.FromSeconds(15);
     }
 
     public async Task<Stream> Handle(GetUggApiResponse request, CancellationToken cancellationToken)
@@ -39,9 +39,32 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         var requestUri =
             $"lol/1.1/{prefix}{request.Type}/{uggVersion}/ranked_solo_5x5/{request.ChampionId}/1.5.0.json";
 
-        var response = await _client.GetAsync(requestUri, cancellationToken);
+        HttpResponseMessage response = null;
+        var success = false;
+        var tries = 0;
+        var shortCircuit = false;
+        do
+        {
+            try
+            {
+                tries++;
+                response = await _client.GetAsync(requestUri, cancellationToken);
+                success = true;
+            }
+            catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
+            {
+                _logger.LogWarning("Retrying UGG API Request {Url} Try {Try}", _client.BaseAddress + requestUri, tries);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("{Exception}", e);
+                shortCircuit = true;
+            }
+            
+        }
+        while (!success && tries < 3 && !shortCircuit);
 
-        if (!response.IsSuccessStatusCode)
+        if (response == null || !response.IsSuccessStatusCode)
         {
             _logger.LogWarning("Could not resolve Ugg request: {Url}", _client.BaseAddress + requestUri);
             return null;
