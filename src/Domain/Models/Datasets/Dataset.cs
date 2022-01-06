@@ -20,6 +20,7 @@ public class Dataset
 
     public PageViewDataset PageView { get; set; }
     public List<ScheduledPatch> PatchSchedule { get; set; }
+    public PatchNotesDataset PatchNotes { get; set; }
 
     public DateTime Date { get; set; } = DateTime.Now;
     public string Version { get; set; }

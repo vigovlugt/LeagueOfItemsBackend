@@ -9,6 +9,7 @@ using LeagueOfItems.Application.Items.Services;
 using LeagueOfItems.Application.PageViews.Commands;
 using LeagueOfItems.Application.PageViews.Queries;
 using LeagueOfItems.Application.Patches.Queries;
+using LeagueOfItems.Application.Patches.Services;
 using LeagueOfItems.Application.Runes.Queries;
 using LeagueOfItems.Application.Runes.Services;
 using LeagueOfItems.Application.Ugg.Helpers;
@@ -57,6 +58,8 @@ public class GetDatasetCommandHandler : IRequestHandler<GetDatasetCommand, Datas
         var pageViewDataset = await _mediator.Send(new GetPageViewsQuery(), cancellationToken);
 
         var patchSchedule = await _mediator.Send(new GetPatchScheduleQuery(), cancellationToken);
+        var patchNotes = await _mediator.Send(new GetPatchNotesQuery(patch), cancellationToken);
+        PatchNotesParserService.PostProcess(patchNotes, championStats, runeStats, itemStats);
 
         var dataset = new Dataset
         {
@@ -67,7 +70,8 @@ public class GetDatasetCommandHandler : IRequestHandler<GetDatasetCommand, Datas
             ChampionMatches = championStats.Sum(s => s.Matches),
             PreviousChampionMatches = previousChampionStats.Sum(s => s.Matches),
             PatchSchedule = patchSchedule,
-            PageView = pageViewDataset
+            PageView = pageViewDataset,
+            PatchNotes = patchNotes
         };
 
         return dataset;
