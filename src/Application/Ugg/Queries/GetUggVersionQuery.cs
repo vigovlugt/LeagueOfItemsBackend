@@ -65,7 +65,7 @@ public class GetUggVersionQueryHandler : IRequestHandler<GetUggVersionQuery, str
         {
             return true;
         }
-        else if (bMajor < aMajor)
+        else if (aMajor < bMajor)
         {
             return false;
         }
