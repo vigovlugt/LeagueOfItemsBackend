@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Fizzler.Systems.HtmlAgilityPack;
@@ -67,7 +68,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         {
             if (node.HasClass("blockquote") && node.HasClass("context"))
             {
-                quote = node.InnerText.Replace("\t", "").Trim(new char[] {' ', '\n'});
+                quote = new Regex("[\t\n]+").Replace(node.InnerText.Trim(new char[] {' ', '\n', '\t'}), "\n\n");
             }
             else if (node.HasClass("header-primary"))
             {
@@ -108,6 +109,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         var change = new PatchNotesChange
         {
             Title = node.QuerySelector(".change-title").ChildNodes[0].ChildNodes.Last().InnerText.Trim(),
+            Summary = node.QuerySelector(".summary")?.InnerText.Trim(),
             Quote = node.QuerySelector(".blockquote.context")?.InnerText.Replace("\t", "").Trim(new char[] {' ', '\n'}),
         };
 

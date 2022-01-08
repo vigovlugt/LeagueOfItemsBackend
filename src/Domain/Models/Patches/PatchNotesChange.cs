@@ -8,6 +8,7 @@ public class PatchNotesChange
     public string Type { get; set; }
     public int? Id { get; set; }
     public string Title { get; set; }
+    public string Summary { get; set; }
     public string Quote { get; set; }
     public List<PatchNotesChangeDetail> Details { get; set; } = new();
 

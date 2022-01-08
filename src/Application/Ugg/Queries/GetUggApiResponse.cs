@@ -28,7 +28,7 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         _logger = logger;
         _client = clientFactory.CreateClient();
         _client.BaseAddress = new Uri(configuration["Ugg:ApiUrl"]);
-        _client.Timeout = TimeSpan.FromSeconds(15);
+        _client.Timeout = TimeSpan.FromSeconds(60);
     }
 
     public async Task<Stream> Handle(GetUggApiResponse request, CancellationToken cancellationToken)
