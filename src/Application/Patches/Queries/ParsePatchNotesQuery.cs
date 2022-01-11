@@ -108,7 +108,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
 
         var change = new PatchNotesChange
         {
-            Title = node.QuerySelector(".change-title").ChildNodes[0].ChildNodes.Last().InnerText.Trim(),
+            Title = node.QuerySelector(".change-title").InnerText.Trim(),
             Summary = node.QuerySelector(".summary")?.InnerText.Trim(),
             Quote = node.QuerySelector(".blockquote.context")?.InnerText.Replace("\t", "").Trim(new char[] {' ', '\n'}),
         };

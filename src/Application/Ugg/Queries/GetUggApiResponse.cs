@@ -23,7 +23,8 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
     private readonly HttpClient _client;
     private readonly ILogger<GetUggApiResponseHandler> _logger;
 
-    public GetUggApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration, ILogger<GetUggApiResponseHandler> logger)
+    public GetUggApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration,
+        ILogger<GetUggApiResponseHandler> logger)
     {
         _logger = logger;
         _client = clientFactory.CreateClient();
@@ -42,7 +43,6 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         HttpResponseMessage response = null;
         var success = false;
         var tries = 0;
-        var shortCircuit = false;
         do
         {
             try
@@ -53,15 +53,20 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
             }
             catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
             {
-                _logger.LogWarning("Retrying UGG API Request {Url} Try {Try}", _client.BaseAddress + requestUri, tries);
+                if (tries < 3)
+                {
+                    _logger.LogWarning("Retrying UGG API Request {Url} Try {Try}", _client.BaseAddress + requestUri, tries);
+                }
+                else
+                {
+                    throw;
+                }
             }
-        }
-        while (!success && tries < 3 && !shortCircuit);
+        } while (!success);
 
         if (response == null || !response.IsSuccessStatusCode)
         {
             _logger.LogWarning("Could not resolve Ugg request: {Url}", _client.BaseAddress + requestUri);
-            return null;
         }
 
         return await response.Content.ReadAsStreamAsync(cancellationToken);
