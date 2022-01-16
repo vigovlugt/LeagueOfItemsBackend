@@ -52,6 +52,8 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         var description = data["description"].ToString();
         var bannerUrl = data["banner"]["url"].ToString();
         var html = data["patch_notes_body"][0]["patch_notes"]["html"].ToString();
+        
+        _logger.LogInformation("Got PatchNotes html {Html}", html);
 
         var document = new HtmlDocument();
         document.LoadHtml(html);
