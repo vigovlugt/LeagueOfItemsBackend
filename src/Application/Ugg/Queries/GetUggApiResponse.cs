@@ -67,6 +67,7 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         if (response == null || !response.IsSuccessStatusCode)
         {
             _logger.LogWarning("Could not resolve Ugg request: {Url}", _client.BaseAddress + requestUri);
+            return null;
         }
 
         return await response.Content.ReadAsStreamAsync(cancellationToken);
