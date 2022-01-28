@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
+#nullable disable
+
 namespace LeagueOfItems.ConsoleApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
@@ -12,8 +14,7 @@ namespace LeagueOfItems.ConsoleApp.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "5.0.5");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
 
             modelBuilder.Entity("LeagueOfItems.Domain.Models.BuildPaths.BuildPathData", b =>
                 {
@@ -100,6 +101,9 @@ namespace LeagueOfItems.ConsoleApp.Migrations
 
                     b.Property<string>("Patch")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Bans")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Matches")
                         .HasColumnType("INTEGER");
@@ -255,7 +259,7 @@ namespace LeagueOfItems.ConsoleApp.Migrations
             modelBuilder.Entity("LeagueOfItems.Domain.Models.BuildPaths.BuildPathData", b =>
                 {
                     b.HasOne("LeagueOfItems.Domain.Models.Champions.Champion", "Champion")
-                        .WithMany()
+                        .WithMany("BuildPathData")
                         .HasForeignKey("ChampionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -349,6 +353,8 @@ namespace LeagueOfItems.ConsoleApp.Migrations
 
             modelBuilder.Entity("LeagueOfItems.Domain.Models.Champions.Champion", b =>
                 {
+                    b.Navigation("BuildPathData");
+
                     b.Navigation("ChampionData");
 
                     b.Navigation("ItemData");

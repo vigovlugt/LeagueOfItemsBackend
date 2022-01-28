@@ -12,5 +12,6 @@ public class ChampionData : IData
     public string Patch { get; set; }
 
     public int Wins { get; set; }
+    public int Bans { get; set; }
     public int Matches { get; set; }
 }

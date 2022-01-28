@@ -11,9 +11,11 @@ namespace LeagueOfItems.Domain.Models.Champions;
 public class ChampionStats : Champion, IStats
 {
     public int Wins { get; set; }
+    public int Bans { get; set; }
     public int Matches { get; set; }
 
     public int PreviousWins { get; set; }
+    public int PreviousBans { get; set; }
     public int PreviousMatches { get; set; }
 
     public List<ChampionRuneStats> RuneStats { get; set; }
@@ -25,12 +27,9 @@ public class ChampionStats : Champion, IStats
     public ChampionStats(Champion champion, List<ItemData> itemData, List<RuneData> runeData,
         List<BuildPathData> buildPathData) : base(champion)
     {
-        Wins = ChampionData.Sum(i => i.Wins);
-        Matches = ChampionData.Sum(i => i.Matches);
-        if (champion.Id == 360)
-        {
-            ;
-        }
+        Wins = ChampionData.Sum(c => c.Wins);
+        Matches = ChampionData.Sum(c => c.Matches);
+        Bans = ChampionData.Sum(c => c.Bans);
 
         RuneData = runeData;
         ItemData = itemData;

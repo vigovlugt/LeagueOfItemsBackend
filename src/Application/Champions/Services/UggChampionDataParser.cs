@@ -28,6 +28,7 @@ public static class UggChampionDataParser
                     ChampionId = championId,
                     Matches = uggChampionData.Matches,
                     Wins = uggChampionData.Wins,
+                    Bans = uggChampionData.Bans,
                     Patch = version
                 };
             });
@@ -41,6 +42,7 @@ public static class UggChampionDataParser
         {
             Wins = championData[0].GetInt32(),
             Matches = championData[1].GetInt32(),
+            Bans = championData[10].ValueKind == JsonValueKind.Null ? 0 : championData[10].GetInt32()
         };
     }
 }

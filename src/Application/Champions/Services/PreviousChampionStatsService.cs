@@ -17,6 +17,11 @@ public static class PreviousChampionStatsService
             {
                 continue;
             }
+            
+            // Set champion stats
+            stat.PreviousMatches = previousStat.Matches;
+            stat.PreviousWins = previousStat.Wins;
+            stat.PreviousBans = previousStat.Bans;
 
             // Set role stats
             var previousRoleById = previousStat.RoleStats.ToDictionary(s => s.Role);
@@ -26,6 +31,7 @@ public static class PreviousChampionStatsService
 
                 roleStats.PreviousMatches = previousRoleStat?.Matches ?? 0;
                 roleStats.PreviousWins = previousRoleStat?.Wins ?? 0;
+                roleStats.PreviousBans = previousRoleStat?.Bans ?? 0;
             }
 
             // Set rune stats
@@ -48,9 +54,6 @@ public static class PreviousChampionStatsService
                 buildPathStats.PreviousMatches = previousBuildPathStats?.Matches ?? 0;
                 buildPathStats.PreviousWins = previousBuildPathStats?.Wins ?? 0;
             }
-
-            stat.PreviousMatches = previousStat.Matches;
-            stat.PreviousWins = previousStat.Wins;
         }
     }
 }
