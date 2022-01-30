@@ -29,7 +29,7 @@ public class ChampionStats : Champion, IStats
     {
         Wins = ChampionData.Sum(c => c.Wins);
         Matches = ChampionData.Sum(c => c.Matches);
-        Bans = ChampionData[0].Bans;
+        Bans = ChampionData.FirstOrDefault()?.Bans ?? 0;
 
         RuneData = runeData;
         ItemData = itemData;
