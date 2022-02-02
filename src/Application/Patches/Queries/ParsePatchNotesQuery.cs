@@ -80,7 +80,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
             }
             else if (node.HasClass("content-border"))
             {
-                var patchChangeBlock = node.QuerySelector("div.patch-change-block");
+                var patchChangeBlock = node.QuerySelector("div.white-stone.accent-before");
                 if (currentGroup != null && currentGroup.Id == "patch-patch-highlights")
                 {
                     highlightUrl = node.QuerySelector("img").GetAttributeValue("src", null);
@@ -88,7 +88,10 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
                 else if (patchChangeBlock != null)
                 {
                     var change = ParseChange(patchChangeBlock);
-                    currentGroup.Changes.Add(change);
+                    if (change != null)
+                    {
+                        currentGroup.Changes.Add(change);
+                    }
                 }
             }
         }
@@ -107,10 +110,14 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
     private PatchNotesChange ParseChange(HtmlNode node)
     {
         node = node.QuerySelector("div");
-
+        if (node.QuerySelector(".change-title") == null)
+        {
+            return null;
+        }
+        
         var change = new PatchNotesChange
         {
-            Title = node.QuerySelector(".change-title").ChildNodes[1].ChildNodes.Last().InnerText.Trim(),
+            Title = (node.QuerySelector(".change-title a") ?? node.QuerySelector(".change-title")).ChildNodes.FindFirst("#text").InnerText.Trim(),
             Summary = node.QuerySelector(".summary")?.InnerText.Trim(),
             Quote = node.QuerySelector(".blockquote.context")?.InnerText.Replace("\t", "").Trim(new char[] {' ', '\n'}),
         };

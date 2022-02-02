@@ -5,9 +5,9 @@ namespace LeagueOfItems.Domain.Models.PageViews;
 
 public class PageViewDataset
 {
-    public List<PageViewData> Items { get; set; }
-    public List<PageViewData> Runes { get; set; }
-    public List<PageViewData> Champions { get; set; }
+    public List<PageViewData> Items { get; set; } = new();
+    public List<PageViewData> Runes { get; set; } = new();
+    public List<PageViewData> Champions { get; set; } = new();
 
     public PageViewDataset(List<PageViewData> pageViewData)
     {
