@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LeagueOfItems.Domain.Models.Champions;
+using LeagueOfItems.Domain.Models.Common;
 
 namespace LeagueOfItems.Application.Champions.Services;
 
@@ -19,8 +20,7 @@ public static class PreviousChampionStatsService
             }
             
             // Set champion stats
-            stat.PreviousMatches = previousStat.Matches;
-            stat.PreviousWins = previousStat.Wins;
+            ((IStats)stat).SetPreviousStats(previousStat);
             stat.PreviousBans = previousStat.Bans;
 
             // Set role stats
@@ -29,8 +29,7 @@ public static class PreviousChampionStatsService
             {
                 var previousRoleStat = previousRoleById.GetValueOrDefault(roleStats.Role);
 
-                roleStats.PreviousMatches = previousRoleStat?.Matches ?? 0;
-                roleStats.PreviousWins = previousRoleStat?.Wins ?? 0;
+                ((IStats)roleStats).SetPreviousStats(previousRoleStat);
                 roleStats.PreviousBans = previousRoleStat?.Bans ?? 0;
             }
 
@@ -39,9 +38,15 @@ public static class PreviousChampionStatsService
             foreach (var runeStats in stat.RuneStats)
             {
                 var previousRoleStat = previousRuneById.GetValueOrDefault(runeStats.RuneId);
-
-                runeStats.PreviousMatches = previousRoleStat?.Matches ?? 0;
-                runeStats.PreviousWins = previousRoleStat?.Wins ?? 0;
+                ((IStats)runeStats).SetPreviousStats(previousRoleStat);
+            }
+            
+            // Set item stats
+            var previousItemById = previousStat.ItemStats.ToDictionary(s => s.ItemId);
+            foreach (var itemStats in stat.ItemStats)
+            {
+                var previousItemStat = previousItemById.GetValueOrDefault(itemStats.ItemId);
+                ((IStats)itemStats).SetPreviousStats(previousItemStat);
             }
 
             // Set build path stats
@@ -50,9 +55,27 @@ public static class PreviousChampionStatsService
             foreach (var buildPathStats in stat.BuildPathStats)
             {
                 var previousBuildPathStats = previousBuildPathById.GetValueOrDefault(new {buildPathStats.Item1Id, buildPathStats.Item2Id, buildPathStats.Item3Id});
+                ((IStats)buildPathStats).SetPreviousStats(previousBuildPathStats);
+            }
+            
+            // Set order stats
+            var previousOrderStatsById = previousStat.OrderStats.ToDictionary(s => s.Order);
+            foreach (var orderStats in stat.OrderStats)
+            {
+                var previousOrderStats = previousOrderStatsById.GetValueOrDefault(orderStats.Order);
+                if (previousOrderStats == null)
+                {
+                    continue;
+                }
+                
+                ((IStats)orderStats).SetPreviousStats(previousOrderStats);
 
-                buildPathStats.PreviousMatches = previousBuildPathStats?.Matches ?? 0;
-                buildPathStats.PreviousWins = previousBuildPathStats?.Wins ?? 0;
+                var previousItemOrderStatsById = previousOrderStats.ItemStats.ToDictionary(s => s.ItemId);
+                foreach (var itemOrderStat in orderStats.ItemStats)
+                {
+                    var previousItemOrderStats = previousItemOrderStatsById.GetValueOrDefault(itemOrderStat.ItemId);
+                    ((IStats)itemOrderStat).SetPreviousStats(previousItemOrderStats);
+                }
             }
         }
     }

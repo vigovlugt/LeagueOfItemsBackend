@@ -5,7 +5,7 @@ using LeagueOfItems.Domain.Models.Runes;
 
 namespace LeagueOfItems.Domain.Models.Champions;
 
-public class ChampionRoleStats
+public class ChampionRoleStats: IStats
 {
     public Role Role { get; set; }
     public int Wins { get; set; }

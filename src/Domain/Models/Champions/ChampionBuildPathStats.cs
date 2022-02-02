@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using LeagueOfItems.Domain.Models.BuildPaths;
+using LeagueOfItems.Domain.Models.Common;
 
 namespace LeagueOfItems.Domain.Models.Champions;
 
-public class ChampionBuildPathStats
+public class ChampionBuildPathStats: IStats
 {
     public int Item1Id { get; set; }
     public int Item2Id { get; set; }

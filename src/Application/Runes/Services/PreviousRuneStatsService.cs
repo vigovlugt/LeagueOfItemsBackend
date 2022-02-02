@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using LeagueOfItems.Domain.Models.Common;
 using LeagueOfItems.Domain.Models.Runes;
 
 namespace LeagueOfItems.Application.Runes.Services;
@@ -17,9 +18,15 @@ public class PreviousRuneStatsService
             {
                 continue;
             }
-
-            stat.PreviousMatches = previousStat.Matches;
-            stat.PreviousWins = previousStat.Wins;
+            
+            ((IStats)stat).SetPreviousStats(previousStat);
+            
+            // Set item stats
+            var previousChampionById = previousStat.ChampionStats.ToDictionary(s => s.ChampionId);
+            foreach (var championStats in stat.ChampionStats)
+            {
+                ((IStats)championStats).SetPreviousStats(previousChampionById.GetValueOrDefault(championStats.ChampionId));
+            }
         }
     }
 }

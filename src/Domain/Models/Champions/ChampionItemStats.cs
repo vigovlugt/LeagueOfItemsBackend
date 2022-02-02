@@ -11,6 +11,8 @@ public class ChampionItemStats : IStats
     public int ItemId { get; set; }
     public int Wins { get; set; }
     public int Matches { get; set; }
+    public int PreviousWins { get; set; }
+    public int PreviousMatches { get; set; }
 
     public ChampionItemStats(int championId, int itemId, List<ItemData> itemData)
     {

@@ -12,6 +12,8 @@ public class RuneChampionStats : IStats
 
     public int Wins { get; set; }
     public int Matches { get; set; }
+    public int PreviousWins { get; set; }
+    public int PreviousMatches { get; set; }
 
     public RuneChampionStats(int runeId, int championId, List<RuneData> runeData)
     {
