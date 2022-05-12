@@ -52,8 +52,6 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         var description = data["description"].ToString();
         var bannerUrl = data["banner"]["url"].ToString();
         var html = data["patch_notes_body"][0]["patch_notes"]["html"].ToString();
-        
-        _logger.LogInformation("Got PatchNotes html {Html}", html);
 
         var document = new HtmlDocument();
         document.LoadHtml(html);
@@ -126,7 +124,11 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         {
             if (htmlNode.HasClass("attribute-change"))
             {
-                change.AddAttributeChange(ParseAttributeChange(htmlNode));
+                var parsed = ParseAttributeChange(htmlNode);
+                if (parsed != null)
+                {
+                    change.AddAttributeChange(parsed);
+                }
             }
             else if (htmlNode.HasClass("change-detail-title"))
             {
@@ -143,6 +145,10 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
     private PatchNotesAttributeChange ParseAttributeChange(HtmlNode node)
     {
         var attributeNode = node.QuerySelector(".attribute");
+        if (attributeNode == null)
+        {
+            return null;
+        }
 
         return new PatchNotesAttributeChange
         {
