@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -63,8 +64,21 @@ public class UploadGithubCommandHandler : IRequestHandler<UploadGithubCommand>
     {
         var updateFileRequest = new UpdateFileRequest("Update League of Items dataset", json, sha);
 
-        await _client.Repository.Content.UpdateFile(_owner, _repository, Path.Join(_path, _fileName),
-            updateFileRequest);
+        var i = 0;
+        while (i < 5)
+        {
+            try
+            {
+                await _client.Repository.Content.UpdateFile(_owner, _repository, Path.Join(_path, _fileName),
+                    updateFileRequest);
+                break;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error trying to update github dataset file: {0}", e);
+                i++;
+            }
+        }
     }
 
     private async Task<string> GetGithubDatasetSha()
