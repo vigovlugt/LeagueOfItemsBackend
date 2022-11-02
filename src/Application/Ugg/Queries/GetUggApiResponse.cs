@@ -38,7 +38,7 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
 
         var prefix = request.Table ? "table/" : "";
         var requestUri =
-            $"lol/1.1/{prefix}{request.Type}/{uggVersion}/ranked_solo_5x5/{request.ChampionId}/1.5.0.json";
+            $"lol/1.5/{prefix}{request.Type}/{uggVersion}/ranked_solo_5x5/{request.ChampionId}/1.5.0.json";
 
         HttpResponseMessage response = null;
         var success = false;
