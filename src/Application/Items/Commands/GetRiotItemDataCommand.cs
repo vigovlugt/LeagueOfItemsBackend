@@ -72,8 +72,13 @@ public class GetRiotItemDataCommandHandler : IRequestHandler<GetRiotItemDataComm
         
     private static List<Item> ParseRiotItems(RiotItemResponse itemResponse)
     {
-        foreach (var (id, item) in itemResponse.Data) item.Id = id;
+        foreach (var (id, item) in itemResponse.Data)
+        {
+            var success = int.TryParse(id, out var idInt);
+            if (!success) idInt = -1;
+            item.Id = idInt;
+        }
 
-        return itemResponse.Data.Values.Select(Item.FromRiotItem).ToList();
+        return itemResponse.Data.Values.Where(i => i.Id != -1).Select(Item.FromRiotItem).ToList();
     }
 }
