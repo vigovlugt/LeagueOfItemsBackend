@@ -39,22 +39,29 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         var response = await _client.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var json = await JsonSerializer.DeserializeAsync<JsonNode>(
-            await response.Content.ReadAsStreamAsync(cancellationToken), cancellationToken: cancellationToken);
+        var html = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var document = new HtmlDocument();
+        document.LoadHtml(html);
+
+        var nextData = document.DocumentNode.QuerySelector("script#__NEXT_DATA__");
+
+        var json = JsonSerializer.Deserialize<JsonNode>(nextData.InnerText);
 
         return ParseJson(json);
     }
 
     private PatchNotesDataset ParseJson(JsonNode json)
     {
-        var data = json["result"]["data"]["all"]["nodes"][0];
-        var title = data["title"].ToString();
-        var description = data["description"].ToString();
-        var bannerUrl = data["banner"]["url"].ToString();
-        var html = data["patch_notes_body"][0]["patch_notes"]["html"].ToString();
+        var data = json["props"]["pageProps"]["page"]["blades"];
+        var patchNotesRichText = data.AsArray().First(b => b["type"].ToString() == "patchNotesRichText")["richText"]["body"].ToString();
+        var masthead = data.AsArray().First(b => b["type"].ToString() == "articleMasthead");
+        var title = masthead["title"].ToString();
+        var description = masthead["description"]["body"].ToString();
+        var bannerUrl = masthead["banner"]["url"].ToString();
 
         var document = new HtmlDocument();
-        document.LoadHtml(html);
+        document.LoadHtml(patchNotesRichText);
 
         var container = document.DocumentNode.ChildNodes[0];
 
@@ -68,7 +75,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         {
             if (node.HasClass("blockquote") && node.HasClass("context"))
             {
-                quote = new Regex("[\t\n]+").Replace(node.InnerText.Trim(new char[] {' ', '\n', '\t'}), "\n\n");
+                quote = new Regex("[\t\n]+").Replace(node.InnerText.Trim(new char[] { ' ', '\n', '\t' }), "\n\n");
             }
             else if (node.HasClass("header-primary"))
             {
@@ -112,12 +119,12 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         {
             return null;
         }
-        
+
         var change = new PatchNotesChange
         {
             Title = (node.QuerySelector(".change-title a") ?? node.QuerySelector(".change-title")).ChildNodes.FindFirst("#text").InnerText.Trim(),
             Summary = node.QuerySelector(".summary")?.InnerText.Trim(),
-            Quote = node.QuerySelector(".blockquote.context")?.InnerText.Replace("\t", "").Trim(new char[] {' ', '\n'}),
+            Quote = node.QuerySelector(".blockquote.context")?.InnerText.Replace("\t", "").Trim(new char[] { ' ', '\n' }),
         };
 
         foreach (var htmlNode in node.ChildNodes)
