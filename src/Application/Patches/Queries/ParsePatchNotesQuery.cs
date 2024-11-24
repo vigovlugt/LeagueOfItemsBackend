@@ -115,7 +115,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
     private PatchNotesChange ParseChange(HtmlNode node)
     {
         node = node.QuerySelector("div");
-        if (node.QuerySelector(".change-title") == null)
+        if (node == null || node.QuerySelector(".change-title") == null)
         {
             return null;
         }
