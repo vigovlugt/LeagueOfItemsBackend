@@ -3,7 +3,7 @@
     <PropertyGroup>
         <RootNamespace>LeagueOfItems.ConsoleApp</RootNamespace>
         <AssemblyName>LeagueOfItems.ConsoleApp</AssemblyName>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Exe</OutputType>
       <UserSecretsId>1797f558-30e9-46b9-b30c-d881b76731f7</UserSecretsId>
   </PropertyGroup>

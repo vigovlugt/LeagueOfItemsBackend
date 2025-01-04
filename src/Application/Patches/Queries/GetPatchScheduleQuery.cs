@@ -57,15 +57,15 @@ public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuer
         return tableRows.Select(r =>
         {
             var tds = r.SelectNodes("td");
-            return new ScheduledPatch(tds[0].InnerHtml, ParseDateString(tds[1].SelectSingleNode("span").InnerHtml));
+            return new ScheduledPatch(tds[0].InnerText, ParseDateString(tds[1].InnerText));
         }).ToList();
     }
 
     private static DateTime ParseDateString(string dateString)
     {
-        dateString = dateString.Replace("Sept", "Sep");
-        dateString = dateString.Replace("Wednesday ", "Wednesday, ");
+        dateString = dateString.Replace("(Wednesday)", "");
+        var normalized = string.Join(" ", dateString.Split(" ").Select(x => x.Trim()));
 
-        return DateTime.Parse(string.Join(" ", dateString.Split(",").Select(x => x.Trim()).Skip(1)));
+        return DateTime.Parse(string.Join(" ", normalized));
     }
 }

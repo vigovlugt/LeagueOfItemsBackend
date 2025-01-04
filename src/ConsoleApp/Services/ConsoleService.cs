@@ -6,6 +6,7 @@ using LeagueOfItems.Application.Champions.Commands;
 using LeagueOfItems.Application.Datasets.Query;
 using LeagueOfItems.Application.Github.Commands;
 using LeagueOfItems.Application.Items.Commands;
+using LeagueOfItems.Application.Patches.Queries;
 using LeagueOfItems.Application.Riot.Queries;
 using LeagueOfItems.Application.Runes.Commands;
 using LeagueOfItems.Application.Ugg.Helpers;
