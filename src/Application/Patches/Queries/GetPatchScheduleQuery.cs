@@ -63,7 +63,12 @@ public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuer
 
     private static DateTime ParseDateString(string dateString)
     {
+        dateString = dateString.Replace("(Monday)", "");
+        dateString = dateString.Replace("(Tuesday)", "");
         dateString = dateString.Replace("(Wednesday)", "");
+        dateString = dateString.Replace("(Thursday)", "");
+        dateString = dateString.Replace("(Friday)", "");
+        
         var normalized = string.Join(" ", dateString.Split(" ").Select(x => x.Trim()));
 
         return DateTime.Parse(string.Join(" ", normalized));
