@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -33,7 +34,13 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
 
     public async Task<PatchNotesDataset> Handle(GetPatchNotesQuery request, CancellationToken cancellationToken)
     {
-        var url = _patchNotesUrl.Replace("{}", request.Patch.Replace(".", "-"));
+        var major = int.Parse(request.Patch.Split('.')[0]) + 10;
+        var minor = int.Parse(request.Patch.Split('.')[1]);
+        var split = (minor - 1) / 8 + 1;
+        var patch = (minor - 1) % 8 + 1;
+        var seasonOnePatch = $"{major}-s{split}-{patch}";
+        var url = _patchNotesUrl.Replace("{}", seasonOnePatch);
+        // var oldUrl = _patchNotesUrl.Replace("{}", request.Patch.Replace(".", "-"));
 
         _logger.LogInformation("Getting Patch Notes from {PatchNotesUrl}", url);
         var response = await _client.GetAsync(url, cancellationToken);

@@ -99,7 +99,6 @@ public class ConsoleService : IHostedService
 
                         break;
                     case "run":
-
                         break;
                     case "empty-db":
                         await _mediator.Send(new DeleteAllItemsCommand(), cancellationToken);
