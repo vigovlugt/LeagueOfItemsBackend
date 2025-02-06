@@ -34,7 +34,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
 
     public async Task<PatchNotesDataset> Handle(GetPatchNotesQuery request, CancellationToken cancellationToken)
     {
-        var major = int.Parse(request.Patch.Split('.')[0]) + 10;
+        var major = int.Parse(request.Patch.Split('.')[0]) + 2010;
         var minor = int.Parse(request.Patch.Split('.')[1]);
         var split = (minor - 1) / 8 + 1;
         var patch = (minor - 1) % 8 + 1;
