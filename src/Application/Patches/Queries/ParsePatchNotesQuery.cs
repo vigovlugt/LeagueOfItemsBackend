@@ -43,7 +43,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         // var url = _patchNotesUrl.Replace("{}", request.Patch.Replace(".", "-"));
         var major = int.Parse(request.Patch.Split('.')[0]);
         var minor = int.Parse(request.Patch.Split('.')[1]);
-        var url = _patchNotesUrl.Replace("{}", $"{major + 10}-{(minor < 10 ? "":"")}{minor}");
+        var url = _patchNotesUrl.Replace("{}", $"{major + 10}-{minor}");
 
         _logger.LogInformation("Getting Patch Notes from {PatchNotesUrl}", url);
         var response = await _client.GetAsync(url, cancellationToken);
