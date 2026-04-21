@@ -98,7 +98,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
                 var patchChangeBlock = node.QuerySelector("div.white-stone.accent-before");
                 if (currentGroup != null && currentGroup.Id == "patch-patch-highlights")
                 {
-                    highlightUrl = node.QuerySelector("img").GetAttributeValue("src", null);
+                    highlightUrl = node.QuerySelector("img")?.GetAttributeValue("src", null) ?? highlightUrl;
                 }
                 else if (patchChangeBlock != null)
                 {
