@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.BuildPaths.Commands;
@@ -38,7 +39,7 @@ public class ConsoleService : IHostedService
 
             if (args.Length <= 1)
             {
-                _logger.LogCritical("Usage: dotnet run ugg/riot/export");
+                _logger.LogCritical("Usage: dotnet run ugg/riot/github/export");
                 _appLifetime.StopApplication();
                 return;
             }
@@ -96,6 +97,15 @@ public class ConsoleService : IHostedService
                     case "github":
                         var dataset = await _mediator.Send(new GetDatasetCommand(), cancellationToken);
                         await _mediator.Send(new UploadGithubCommand(dataset), cancellationToken);
+
+                        break;
+                    case "export":
+                        var exportDataset = await _mediator.Send(new GetDatasetCommand(), cancellationToken);
+                        var json = JsonSerializer.Serialize(exportDataset, new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        });
+                        Console.WriteLine(json);
 
                         break;
                     case "run":

@@ -10,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddDbContext<ApplicationDbContext>();
+        services.AddHttpClient();
         services.AddScoped<IApplicationDbContext>(provider => provider.GetService<ApplicationDbContext>());
         services.AddScoped<IPageViewRepository, PageViewRepository>();
 

@@ -1,48 +1,124 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LeagueOfItems.Application.Common.Interfaces;
 using LeagueOfItems.Domain.Models.PageViews;
 using Microsoft.Extensions.Configuration;
-using MongoDB.Driver;
 
 namespace LeagueOfItems.Infrastructure.Repositories;
 
 public class PageViewRepository : IPageViewRepository
 {
-    private readonly IMongoCollection<PageView> _pageViewsCollection;
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    private readonly HttpClient _client;
+    private readonly string _accountId;
+    private readonly string _apiToken;
+    private readonly string _dataset;
+    private readonly int _lookbackDays;
 
     public PageViewRepository(
+        IHttpClientFactory clientFactory,
         IConfiguration config)
     {
-        var mongoClient = new MongoClient(
-            config["MongoDb:ConnectionString"]);
-
-        var mongoDatabase = mongoClient.GetDatabase(config["MongoDb:DatabaseName"]);
-
-        _pageViewsCollection = mongoDatabase.GetCollection<PageView>(config["MongoDb:PageViewsCollection"]);
+        _client = clientFactory.CreateClient();
+        _accountId = config["Cloudflare:AccountId"];
+        _apiToken = config["Cloudflare:AnalyticsApiToken"];
+        _dataset = config["Cloudflare:PageViewsDataset"] ?? "pageviews";
+        _lookbackDays = int.TryParse(config["Cloudflare:PageViewsLookbackDays"], out var lookbackDays)
+            ? lookbackDays
+            : 7;
     }
 
     public async Task<PageViewDataset> GetDatasetAsync()
     {
-        var result = await _pageViewsCollection.Aggregate().Group(v => new {v.Type, v.Id},
-            v => new {v.Key, Count = v.Count()}).ToListAsync();
-
-        var pageViewResults = result.Select(v => new PageViewData
+        if (string.IsNullOrWhiteSpace(_accountId))
         {
-            Id = v.Key.Id,
-            Type = v.Key.Type,
-            Count = v.Count
+            throw new InvalidOperationException("Cloudflare:AccountId configuration is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(_apiToken))
+        {
+            throw new InvalidOperationException("Cloudflare:AnalyticsApiToken configuration is required");
+        }
+
+        if (!Regex.IsMatch(_dataset, "^[A-Za-z_][A-Za-z0-9_]*$"))
+        {
+            throw new InvalidOperationException("Cloudflare:PageViewsDataset must be a valid Analytics Engine table name");
+        }
+
+        if (_lookbackDays <= 0)
+        {
+            throw new InvalidOperationException("Cloudflare:PageViewsLookbackDays must be greater than zero");
+        }
+
+        var sql = $"""
+                  SELECT
+                      blob1 AS type,
+                      blob2 AS id,
+                      SUM(_sample_interval * double1) AS count
+                  FROM {_dataset}
+                  WHERE timestamp >= NOW() - INTERVAL '{_lookbackDays}' DAY
+                    AND blob1 IN ('ITEM', 'RUNE', 'CHAMPION')
+                  GROUP BY type, id
+                  ORDER BY count DESC
+                  FORMAT JSON
+                  """;
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"https://api.cloudflare.com/client/v4/accounts/{_accountId}/analytics_engine/sql")
+        {
+            Content = new StringContent(sql, Encoding.UTF8, "text/plain")
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+
+        using var response = await _client.SendAsync(request);
+        var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Cloudflare Analytics Engine SQL API returned {(int)response.StatusCode}: {content}");
+        }
+
+        var result = JsonSerializer.Deserialize<AnalyticsEngineResponse>(content, JsonOptions)
+                     ?? new AnalyticsEngineResponse();
+
+        var pageViewResults = result.Data.Select(v => new PageViewData
+        {
+            Id = int.Parse(v.Id),
+            Type = v.Type,
+            Count = (int)Math.Round(v.Count)
         }).OrderByDescending(p => p.Count).ToList();
 
         return new PageViewDataset(pageViewResults);
     }
 
-    public async Task<int> DeleteOldAsync()
+    private class AnalyticsEngineResponse
     {
-        var result =  await _pageViewsCollection.DeleteManyAsync(v => v.CreatedAt < DateTime.Now.AddDays(-7));
+        [JsonPropertyName("data")]
+        public List<AnalyticsEnginePageViewRow> Data { get; set; } = new();
+    }
 
-        return (int)result.DeletedCount;
+    private class AnalyticsEnginePageViewRow
+    {
+        [JsonPropertyName("type")]
+        public string Type { get; set; }
+
+        [JsonPropertyName("id")]
+        public string Id { get; set; }
+
+        [JsonPropertyName("count")]
+        public double Count { get; set; }
     }
 }

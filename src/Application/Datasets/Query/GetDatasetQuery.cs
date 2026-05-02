@@ -6,7 +6,6 @@ using LeagueOfItems.Application.Champions.Queries;
 using LeagueOfItems.Application.Champions.Services;
 using LeagueOfItems.Application.Items.Queries;
 using LeagueOfItems.Application.Items.Services;
-using LeagueOfItems.Application.PageViews.Commands;
 using LeagueOfItems.Application.PageViews.Queries;
 using LeagueOfItems.Application.Patches.Queries;
 using LeagueOfItems.Application.Patches.Services;
@@ -54,7 +53,6 @@ public class GetDatasetCommandHandler : IRequestHandler<GetDatasetCommand, Datas
         var previousChampionStats = await _mediator.Send(new GetAllChampionsQuery(previousPatch), cancellationToken);
         PreviousChampionStatsService.SetPreviousChampionStats(championStats, previousChampionStats);
 
-        await _mediator.Send(new DeleteOldPageViewCommand(), cancellationToken);
         var pageViewDataset = await _mediator.Send(new GetPageViewsQuery(), cancellationToken);
 
         var patchSchedule = await _mediator.Send(new GetPatchScheduleQuery(), cancellationToken);

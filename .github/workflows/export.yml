@@ -42,4 +42,5 @@ jobs:
       run: dotnet bin/Release/net8.0/LeagueOfItems.ConsoleApp.dll github
       env:
         "Github:Token": ${{ secrets.TOKEN }}
-        "MongoDb:ConnectionString": ${{ secrets.MONGODB_CONNECTIONSTRING }}
+        "Cloudflare:AccountId": ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        "Cloudflare:AnalyticsApiToken": ${{ secrets.CLOUDFLARE_ANALYTICS_API_TOKEN }}
