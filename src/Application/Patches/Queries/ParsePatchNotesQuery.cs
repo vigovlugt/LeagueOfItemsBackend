@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -90,7 +91,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
             else if (node.HasClass("header-primary"))
             {
                 var h2 = node.QuerySelector("h2");
-                currentGroup = new PatchNotesGroup(h2.Id, h2.InnerText);
+                currentGroup = new PatchNotesGroup(h2.Id, NormalizeText(h2.InnerText));
                 groups.Add(currentGroup);
             }
             else if (node.HasClass("content-border"))
@@ -102,11 +103,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
                 }
                 else if (patchChangeBlock != null)
                 {
-                    var change = ParseChange(patchChangeBlock);
-                    if (change != null)
-                    {
-                        currentGroup.Changes.Add(change);
-                    }
+                    currentGroup.Changes.AddRange(ParseChanges(patchChangeBlock, currentGroup.Title));
                 }
             }
         }
@@ -122,58 +119,226 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         };
     }
 
-    private PatchNotesChange ParseChange(HtmlNode node)
+    private List<PatchNotesChange> ParseChanges(HtmlNode node, string fallbackTitle)
     {
-        node = node.QuerySelector("div");
-        if (node == null || node.QuerySelector(".change-title") == null)
+        var content = node.QuerySelector("div");
+        if (content == null)
         {
-            return null;
+            return new List<PatchNotesChange>();
         }
 
-        var change = new PatchNotesChange
+        var titleNode = content.QuerySelector(".change-title");
+        if (titleNode != null)
         {
-            Title = (node.QuerySelector(".change-title a") ?? node.QuerySelector(".change-title")).ChildNodes.FindFirst("#text").InnerText.Trim(),
-            Summary = node.QuerySelector(".summary")?.InnerText.Trim(),
-            Quote = node.QuerySelector(".blockquote.context")?.InnerText.Replace("\t", "").Trim(new char[] { ' ', '\n' }),
-        };
-
-        foreach (var htmlNode in node.ChildNodes)
-        {
-            if (htmlNode.HasClass("attribute-change"))
+            return new List<PatchNotesChange>
             {
-                var parsed = ParseAttributeChange(htmlNode);
-                if (parsed != null)
+                new()
                 {
-                    change.AddAttributeChange(parsed);
+                    Title = GetChangeTitle(titleNode),
+                    Body = ToMarkdown(GetNodesAfter(content.ChildNodes, titleNode))
                 }
-            }
-            else if (htmlNode.HasClass("change-detail-title"))
-            {
-                change.Details.Add(new PatchNotesChangeDetail
-                {
-                    Title = htmlNode.InnerText.Trim()
-                });
-            }
+            };
         }
 
-        return change;
+        var changes = ParseChangesByDetailTitle(content);
+        if (changes.Any())
+        {
+            return changes;
+        }
+
+        var body = ToMarkdown(content.ChildNodes);
+        return string.IsNullOrWhiteSpace(body)
+            ? new List<PatchNotesChange>()
+            : new List<PatchNotesChange>
+            {
+                new()
+                {
+                    Title = GetFallbackTitle(content, fallbackTitle),
+                    Body = body
+                }
+            };
     }
 
-    private PatchNotesAttributeChange ParseAttributeChange(HtmlNode node)
+    private List<PatchNotesChange> ParseChangesByDetailTitle(HtmlNode content)
     {
-        var attributeNode = node.QuerySelector(".attribute");
-        if (attributeNode == null)
+        var changes = new List<PatchNotesChange>();
+        PatchNotesChange currentChange = null;
+        var bodyNodes = new List<HtmlNode>();
+        var pendingHeadings = new List<string>();
+
+        foreach (var node in content.ChildNodes)
+        {
+            if (node.HasClass("change-detail-title"))
+            {
+                AddChange(changes, currentChange, bodyNodes, pendingHeadings);
+                currentChange = new PatchNotesChange
+                {
+                    Title = NormalizeText(node.InnerText)
+                };
+                bodyNodes = new List<HtmlNode>();
+                continue;
+            }
+
+            bodyNodes.Add(node);
+        }
+
+        AddChange(changes, currentChange, bodyNodes, pendingHeadings);
+        return changes.Where(change => !string.IsNullOrWhiteSpace(change.Title)).ToList();
+    }
+
+    private void AddChange(
+        List<PatchNotesChange> changes,
+        PatchNotesChange change,
+        IEnumerable<HtmlNode> bodyNodes,
+        List<string> pendingHeadings)
+    {
+        if (change == null)
+        {
+            return;
+        }
+
+        var body = ToMarkdown(bodyNodes);
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            pendingHeadings.Add($"#### {change.Title}");
+            return;
+        }
+
+        if (pendingHeadings.Any())
+        {
+            body = string.Join("\n\n", pendingHeadings) + "\n\n" + body;
+            pendingHeadings.Clear();
+        }
+
+        change.Body = body;
+        changes.Add(change);
+    }
+
+    private string GetFallbackTitle(HtmlNode content, string fallbackTitle)
+    {
+        var firstParagraph = content.Elements("p")
+            .Select(p => NormalizeText(p.InnerText).TrimEnd(':'))
+            .FirstOrDefault(text => !string.IsNullOrWhiteSpace(text));
+
+        if (string.Equals(firstParagraph, "The following skins will be released in this patch", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Skins";
+        }
+
+        if (string.Equals(firstParagraph, "The following chromas will be released this patch", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Chromas";
+        }
+
+        return fallbackTitle;
+    }
+
+    private IEnumerable<HtmlNode> GetNodesAfter(HtmlNodeCollection nodes, HtmlNode titleNode)
+    {
+        var foundTitle = false;
+        foreach (var node in nodes)
+        {
+            if (node == titleNode)
+            {
+                foundTitle = true;
+                continue;
+            }
+
+            if (foundTitle)
+            {
+                yield return node;
+            }
+        }
+    }
+
+    private string GetChangeTitle(HtmlNode titleNode)
+    {
+        return NormalizeText((titleNode.QuerySelector("a") ?? titleNode).InnerText);
+    }
+
+    private string ToMarkdown(IEnumerable<HtmlNode> nodes)
+    {
+        var lines = nodes.Select(ToMarkdown)
+            .Where(markdown => !string.IsNullOrWhiteSpace(markdown));
+
+        return string.Join("\n\n", lines);
+    }
+
+    private string ToMarkdown(HtmlNode node)
+    {
+        return node.Name switch
+        {
+            "#text" => NormalizeText(node.InnerText),
+            "blockquote" => ToBlockquoteMarkdown(node),
+            "h4" => $"#### {NormalizeText(node.InnerText)}",
+            "h5" => $"##### {NormalizeText(node.InnerText)}",
+            "ul" => ToListMarkdown(node),
+            "ol" => ToListMarkdown(node),
+            "p" => NormalizeText(ToInlineMarkdown(node)),
+            "hr" => "---",
+            "div" => ToMarkdown(node.ChildNodes),
+            _ => node.HasChildNodes ? ToMarkdown(node.ChildNodes) : NormalizeText(node.InnerText)
+        };
+    }
+
+    private string ToBlockquoteMarkdown(HtmlNode node)
+    {
+        var text = ToMarkdown(node.ChildNodes);
+        if (string.IsNullOrWhiteSpace(text))
         {
             return null;
         }
 
-        return new PatchNotesAttributeChange
+        return string.Join("\n", text.Split('\n').Select(line => $"> {line}"));
+    }
+
+    private string ToListMarkdown(HtmlNode node)
+    {
+        var index = 1;
+        var lines = new List<string>();
+        foreach (var listItem in node.Elements("li"))
         {
-            Attribute = attributeNode.ChildNodes.Last().InnerText.Trim(),
-            ChangeType = attributeNode.ChildNodes.Count > 1 ? attributeNode.ChildNodes[0].InnerText.Trim() : null,
-            Before = node.QuerySelector(".attribute-before")?.InnerText.Trim(),
-            After = node.QuerySelector(".attribute-after")?.InnerText.Trim(),
-            Removed = node.QuerySelector(".attribute-removed")?.InnerText.Trim()
+            var prefix = node.Name == "ol" ? $"{index++}. " : "- ";
+            lines.Add(prefix + NormalizeText(ToInlineMarkdown(listItem)));
+        }
+
+        return string.Join("\n", lines);
+    }
+
+    private string ToInlineMarkdown(HtmlNode node)
+    {
+        if (node.Name == "#text")
+        {
+            return HtmlEntity.DeEntitize(node.InnerText);
+        }
+
+        if (node.Name == "br")
+        {
+            return "\n";
+        }
+
+        if (node.Name == "img")
+        {
+            var src = node.GetAttributeValue("src", null);
+            return string.IsNullOrWhiteSpace(src) ? "" : $"![]({src})";
+        }
+
+        var content = new StringBuilder();
+        foreach (var childNode in node.ChildNodes)
+        {
+            content.Append(ToInlineMarkdown(childNode));
+        }
+
+        return node.Name switch
+        {
+            "strong" or "b" => $"**{content}**",
+            "em" or "i" => $"_{content}_",
+            _ => content.ToString()
         };
+    }
+
+    private string NormalizeText(string text)
+    {
+        return Regex.Replace(HtmlEntity.DeEntitize(text), @"\s+", " ").Trim();
     }
 }
