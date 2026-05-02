@@ -49,6 +49,14 @@ public static class PreviousChampionStatsService
                 ((IStats)itemStats).SetPreviousStats(previousItemStat);
             }
 
+            // Set boots stats
+            var previousBootsById = previousStat.BootsStats.ToDictionary(s => s.ItemId);
+            foreach (var bootsStats in stat.BootsStats)
+            {
+                var previousBootsStat = previousBootsById.GetValueOrDefault(bootsStats.ItemId);
+                ((IStats)bootsStats).SetPreviousStats(previousBootsStat);
+            }
+
             // Set build path stats
             var previousBuildPathById =
                 previousStat.BuildPathStats.ToDictionary(s => new {s.Item1Id, s.Item2Id, s.Item3Id});

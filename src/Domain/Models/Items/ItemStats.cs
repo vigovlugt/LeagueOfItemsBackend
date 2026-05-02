@@ -32,20 +32,23 @@ public class ItemStats : Item, IStats
             .OrderByDescending(stats => stats.Matches)
             .ToList();
 
-        OrderStats = Enumerable.Range(0, 5).Select(i =>
-        {
-            var championStats = ItemData
-                .Where(itemData => itemData.Order == i)
-                .GroupBy(c => c.Champion, new ChampionComparer())
-                .Where(grouping =>
-                    grouping.Sum(d => d.Matches) > Math.Max(grouping.Key.ChampionData.Sum(d => d.Matches) *
-                                                            Constants.MatchMinimumRelative,
-                        Constants.MinimumMatches))
-                .Select(grouping => new ItemChampionStats(item.Id, grouping.Key.Id, grouping.ToList()))
-                .OrderByDescending(stats => stats.Matches)
-                .ToList();
+        var coreItemData = ItemData.Where(itemData => itemData.Slot == ItemSlot.Core).ToList();
+        OrderStats = coreItemData.Count == ItemData.Count
+            ? Enumerable.Range(0, 5).Select(i =>
+            {
+                var championStats = coreItemData
+                    .Where(itemData => itemData.Order == i)
+                    .GroupBy(c => c.Champion, new ChampionComparer())
+                    .Where(grouping =>
+                        grouping.Sum(d => d.Matches) > Math.Max(grouping.Key.ChampionData.Sum(d => d.Matches) *
+                                                                Constants.MatchMinimumRelative,
+                            Constants.MinimumMatches))
+                    .Select(grouping => new ItemChampionStats(item.Id, grouping.Key.Id, grouping.ToList()))
+                    .OrderByDescending(stats => stats.Matches)
+                    .ToList();
 
-            return new ItemOrderStats(i, championStats);
-        }).ToList();
+                return new ItemOrderStats(i, championStats);
+            }).ToList()
+            : new List<ItemOrderStats>();
     }
 }

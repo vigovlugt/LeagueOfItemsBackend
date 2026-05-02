@@ -156,6 +156,9 @@ namespace LeagueOfItems.ConsoleApp.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("Slot")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Region")
                         .HasColumnType("INTEGER");
 

@@ -9,6 +9,7 @@ public class ItemData : IData
     public Item Item { get; set; }
 
     public int Order { get; set; }
+    public ItemSlot Slot { get; set; } = ItemSlot.Core;
 
     public int ChampionId { get; set; }
     public Champion Champion { get; set; }

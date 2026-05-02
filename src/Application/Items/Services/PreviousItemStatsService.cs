@@ -13,7 +13,7 @@ public class PreviousItemStatsService
 
         foreach (var stat in stats)
         {
-            var previousStat = previousById[stat.Id];
+            var previousStat = previousById.GetValueOrDefault(stat.Id);
             if (previousStat == null)
             {
                 continue;

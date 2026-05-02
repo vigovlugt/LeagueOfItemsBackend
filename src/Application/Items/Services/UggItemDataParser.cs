@@ -11,6 +11,8 @@ namespace LeagueOfItems.Application.Items.Services;
 
 public static class UggItemDataParser
 {
+    private const int BootsIndex = 1;
+
     public static async Task<List<ItemData>> Parse(
         int championId,
         Stream stream,
@@ -25,13 +27,9 @@ public static class UggItemDataParser
 
                 for (var i = 0; i < uggItemDataByOrder.Count; i++)
                 {
-                    if (i == 1)
-                        // TODO handle boots
-                        continue;
-
                     var uggItemData = uggItemDataByOrder[i];
-
-                    var order = i == 0 ? i : i - 1;
+                    var slot = GetSlot(i);
+                    var order = GetOrder(i, slot);
 
                     itemDataList.AddRange(uggItemData.Select(uggItem => new ItemData
                     {
@@ -40,6 +38,7 @@ public static class UggItemDataParser
                         Matches = uggItem.Matches,
                         Wins = uggItem.Wins,
                         Order = order,
+                        Slot = slot,
                         Rank = rank,
                         Region = region,
                         Role = role,
@@ -51,6 +50,21 @@ public static class UggItemDataParser
             });
 
         return parsed.SelectMany(x => x).ToList();
+    }
+
+    private static ItemSlot GetSlot(int groupIndex)
+    {
+        return groupIndex == BootsIndex ? ItemSlot.Boots : ItemSlot.Core;
+    }
+
+    private static int GetOrder(int groupIndex, ItemSlot slot)
+    {
+        if (slot == ItemSlot.Boots)
+        {
+            return 0;
+        }
+
+        return groupIndex < BootsIndex ? groupIndex : groupIndex - 1;
     }
 
     private static List<List<UggSimpleItemData>> ParseItem(IEnumerable<List<JsonElement>> itemData)

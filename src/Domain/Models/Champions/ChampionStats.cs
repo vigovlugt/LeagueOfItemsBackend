@@ -23,6 +23,7 @@ public class ChampionStats : Champion, IStats
     public List<ChampionRoleStats> RoleStats { get; set; }
     public List<ChampionBuildPathStats> BuildPathStats { get; set; }
     public List<ChampionItemOrderStats> OrderStats { get; set; }
+    public List<ChampionItemStats> BootsStats { get; set; }
 
     public ChampionStats(Champion champion, List<ItemData> itemData, List<RuneData> runeData,
         List<BuildPathData> buildPathData) : base(champion)
@@ -38,7 +39,16 @@ public class ChampionStats : Champion, IStats
         // When this champion is played, rune/item/role must be picked at least 0.5%.
         var matchMinimum = Math.Max(Matches * Constants.MatchMinimumRelative, Constants.MinimumMatches);
 
+        var coreItemData = ItemData.Where(i => i.Slot == ItemSlot.Core).ToList();
+        var bootsItemData = ItemData.Where(i => i.Slot == ItemSlot.Boots).ToList();
+
         ItemStats = ItemData.GroupBy(i => i.ItemId)
+            .Where(grouping => grouping.Sum(stats => stats.Matches) > matchMinimum)
+            .Select(grouping => new ChampionItemStats(champion.Id, grouping.Key, grouping.ToList()))
+            .OrderByDescending(stats => stats.Matches)
+            .ToList();
+
+        BootsStats = bootsItemData.GroupBy(i => i.ItemId)
             .Where(grouping => grouping.Sum(stats => stats.Matches) > matchMinimum)
             .Select(grouping => new ChampionItemStats(champion.Id, grouping.Key, grouping.ToList()))
             .OrderByDescending(stats => stats.Matches)
@@ -68,7 +78,7 @@ public class ChampionStats : Champion, IStats
 
         OrderStats = Enumerable.Range(0, 5).Select(i =>
         {
-            var data = ItemData.Where(d => d.Order == i).ToList();
+            var data = coreItemData.Where(d => d.Order == i).ToList();
             var orderMatchesMinimum = Math.Max(data.Sum(d => d.Matches) * Constants.MatchMinimumRelative,
                 Constants.MinimumMatches);
 
