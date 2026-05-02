@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Fizzler.Systems.HtmlAgilityPack;
 using HtmlAgilityPack;
 using LeagueOfItems.Domain.Models.Patches;
+using LeagueOfItems.Application.Ugg.Helpers;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -42,9 +43,7 @@ public class GetPatchNotesQueryHandler : IRequestHandler<GetPatchNotesQuery, Pat
         // var seasonOnePatch = $"{major}-s{split}-{patch}";
         // var url = _patchNotesUrl.Replace("{}", seasonOnePatch);
         // var url = _patchNotesUrl.Replace("{}", request.Patch.Replace(".", "-"));
-        var major = int.Parse(request.Patch.Split('.')[0]);
-        var minor = int.Parse(request.Patch.Split('.')[1]);
-        var url = _patchNotesUrl.Replace("{}", $"{major + 10}-{minor}");
+        var url = _patchNotesUrl.Replace("{}", LolVersionHelper.GetPublicPatchSlug(request.Patch));
 
         _logger.LogInformation("Getting Patch Notes from {PatchNotesUrl}", url);
         var response = await _client.GetAsync(url, cancellationToken);

@@ -64,7 +64,7 @@ public class GetDatasetCommandHandler : IRequestHandler<GetDatasetCommand, Datas
             Items = itemStats,
             Runes = runeStats,
             Champions = championStats,
-            Version = patch,
+            Version = LolVersionHelper.GetPublicPatchVersion(patch),
             ChampionMatches = championStats.Sum(s => s.Matches),
             PreviousChampionMatches = previousChampionStats.Sum(s => s.Matches),
             PatchSchedule = patchSchedule,

@@ -5,6 +5,8 @@ namespace LeagueOfItems.Application.Ugg.Helpers;
 
 public static class LolVersionHelper
 {
+    private const int PublicPatchMajorOffset = 10;
+
     public static string GetPreviousVersion(string version)
     {
         var parts = version.Split(".");
@@ -23,6 +25,21 @@ public static class LolVersionHelper
         }
 
         return $"{major}.{minor}";
+    }
+
+    public static string GetPublicPatchVersion(string version)
+    {
+        var parts = version.Split(".");
+
+        var major = int.Parse(parts[0]);
+        var minor = int.Parse(parts[1]);
+
+        return $"{major + PublicPatchMajorOffset}.{minor}";
+    }
+
+    public static string GetPublicPatchSlug(string version)
+    {
+        return GetPublicPatchVersion(version).Replace(".", "-");
     }
         
     public static string GetPreviousVersion(List<string> versions)
