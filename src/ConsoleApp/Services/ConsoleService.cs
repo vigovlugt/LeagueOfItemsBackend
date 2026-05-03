@@ -57,14 +57,14 @@ public class ConsoleService : IHostedService
                         await _mediator.Send(new DeleteAllItemsCommand(), cancellationToken);
                         await _mediator.Send(new DeleteAllRunesCommand(), cancellationToken);
 
-                        await _mediator.Send(new GetRiotChampionDataCommand(version), cancellationToken);
-                        await _mediator.Send(new GetRiotItemDataCommand(version), cancellationToken);
-                        await _mediator.Send(new GetRiotRuneDataCommand(version), cancellationToken);
-                            
                         await _mediator.Send(new GetRiotChampionDataCommand(previousRiotVersion),
                             cancellationToken);
                         await _mediator.Send(new GetRiotItemDataCommand(previousRiotVersion), cancellationToken);
                         await _mediator.Send(new GetRiotRuneDataCommand(previousRiotVersion), cancellationToken);
+
+                        await _mediator.Send(new GetRiotChampionDataCommand(version), cancellationToken);
+                        await _mediator.Send(new GetRiotItemDataCommand(version), cancellationToken);
+                        await _mediator.Send(new GetRiotRuneDataCommand(version), cancellationToken);
 
                         break;
                     case "ugg":
