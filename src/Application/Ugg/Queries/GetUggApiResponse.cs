@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,8 +19,12 @@ public record GetUggApiResponse : IRequest<Stream>
     public bool Table { get; init; } = true;
 }
 
+
 public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Stream>
 {
+    private const int MaxTries = 5;
+    private static readonly TimeSpan RequestDelay = TimeSpan.FromMilliseconds(500);
+
     private readonly HttpClient _client;
     private readonly ILogger<GetUggApiResponseHandler> _logger;
 
@@ -30,6 +35,8 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         _client = clientFactory.CreateClient();
         _client.BaseAddress = new Uri(configuration["Ugg:ApiUrl"]);
         _client.Timeout = TimeSpan.FromSeconds(60);
+        _client.DefaultRequestHeaders.UserAgent.ParseAdd("LeagueOfItems/1.0");
+        _client.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/plain, */*");
     }
 
     public async Task<Stream> Handle(GetUggApiResponse request, CancellationToken cancellationToken)
@@ -41,35 +48,66 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
             $"lol/1.5/{prefix}{request.Type}/{uggVersion}/ranked_solo_5x5/{request.ChampionId}/1.5.0.json";
 
         HttpResponseMessage response = null;
-        var success = false;
-        var tries = 0;
-        do
+        for (var tries = 1; tries <= MaxTries; tries++)
         {
             try
             {
-                tries++;
+                await Task.Delay(RequestDelay, cancellationToken);
                 response = await _client.GetAsync(requestUri, cancellationToken);
-                success = true;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsStreamAsync(cancellationToken);
+                }
+
+                if (!ShouldRetry(response.StatusCode) || tries == MaxTries)
+                {
+                    break;
+                }
+
+                if (ShouldRetry(response.StatusCode))
+                {
+                    _logger.LogWarning("Retrying UGG API Request {Url} Try {Try} Status: {StatusCode}",
+                        _client.BaseAddress + requestUri, tries, response.StatusCode);
+
+                    await Task.Delay(GetRetryDelay(response, tries), cancellationToken);
+                }
             }
-            catch (TaskCanceledException e) when (e.InnerException is TimeoutException)
+            catch (Exception e) when (IsTransient(e) && tries < MaxTries)
             {
-                if (tries < 3)
-                {
-                    _logger.LogWarning("Retrying UGG API Request {Url} Try {Try}", _client.BaseAddress + requestUri, tries);
-                }
-                else
-                {
-                    throw;
-                }
+                _logger.LogWarning(e, "Retrying UGG API Request {Url} Try {Try}", _client.BaseAddress + requestUri,
+                    tries);
+
+                await Task.Delay(TimeSpan.FromSeconds(tries * 2), cancellationToken);
             }
-        } while (!success);
+        }
 
         if (response == null || !response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("Could not resolve Ugg request: {Url}", _client.BaseAddress + requestUri);
+            _logger.LogWarning("Could not resolve Ugg request: {Url} Status: {StatusCode}",
+                _client.BaseAddress + requestUri, response?.StatusCode);
             return null;
         }
 
         return await response.Content.ReadAsStreamAsync(cancellationToken);
+    }
+
+    private static bool ShouldRetry(HttpStatusCode statusCode)
+    {
+        return statusCode == HttpStatusCode.TooManyRequests || (int)statusCode >= 500;
+    }
+
+    private static bool IsTransient(Exception exception)
+    {
+        return exception is HttpRequestException ||
+               exception is TaskCanceledException { InnerException: TimeoutException };
+    }
+
+    private static TimeSpan GetRetryDelay(HttpResponseMessage response, int tries)
+    {
+        return response.Headers.RetryAfter?.Delta ??
+               (response.StatusCode == HttpStatusCode.TooManyRequests
+                   ? TimeSpan.FromSeconds(30)
+                   : TimeSpan.FromSeconds(tries * 2));
     }
 }

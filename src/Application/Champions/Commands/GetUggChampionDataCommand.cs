@@ -34,12 +34,11 @@ public class GetUggChampionDataCommandHandler : IRequestHandler<GetUggChampionDa
     {
         var champions = await _context.Champions.ToListAsync(cancellationToken);
 
-        var championDataTasks =
-            champions.Select(champion => GetDataForChampion(request.Version, champion)).ToList();
-
-        await Task.WhenAll(championDataTasks);
-
-        var championData = championDataTasks.SelectMany(x => x.Result).ToList();
+        var championData = new List<ChampionData>();
+        foreach (var champion in champions)
+        {
+            championData.AddRange(await GetDataForChampion(request.Version, champion));
+        }
 
         await SaveChampionData(championData);
 

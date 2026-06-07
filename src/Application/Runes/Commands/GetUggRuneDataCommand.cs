@@ -34,12 +34,11 @@ public class GetUggRuneDataCommandHandler : IRequestHandler<GetUggRuneDataComman
     {
         var champions = await _context.Champions.ToListAsync(cancellationToken);
 
-        var runeDataLists = champions.Select(champion => GetRuneDataForChampion(request.Version, champion))
-            .ToList();
-
-        await Task.WhenAll(runeDataLists);
-
-        var runeData = runeDataLists.SelectMany(x => x.Result).ToList();
+        var runeData = new List<RuneData>();
+        foreach (var champion in champions)
+        {
+            runeData.AddRange(await GetRuneDataForChampion(request.Version, champion));
+        }
 
         await SaveRuneData(runeData);
 

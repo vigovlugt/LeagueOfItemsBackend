@@ -35,13 +35,12 @@ public class GetUggBuildPathDataCommandHandler : IRequestHandler<GetUggBuildPath
     public async Task<List<BuildPathData>> Handle(GetUggBuildPathDataCommand request, CancellationToken cancellationToken)
     {
         var champions = await _context.Champions.ToListAsync(cancellationToken);
-            
-        var buildPathDataTasks =
-            champions.Select(champion => GetBuildPathDataForChampion(request.Version, champion)).ToList();
-            
-        await Task.WhenAll(buildPathDataTasks);
 
-        var buildPathData = buildPathDataTasks.SelectMany(x => x.Result).ToList();
+        var buildPathData = new List<BuildPathData>();
+        foreach (var champion in champions)
+        {
+            buildPathData.AddRange(await GetBuildPathDataForChampion(request.Version, champion));
+        }
 
         await SaveBuildPathData(buildPathData);
 
