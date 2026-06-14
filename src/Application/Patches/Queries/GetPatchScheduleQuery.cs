@@ -15,14 +15,9 @@ namespace LeagueOfItems.Application.Patches.Queries;
 
 public record GetPatchScheduleQuery : IRequest<List<ScheduledPatch>>;
 
-record ZendeskApiResponse
+record PatchScheduleApiResponse
 {
-    public ZendeskApiArticle Article { get; set; }
-}
-
-record ZendeskApiArticle
-{
-    public string Body { get; set; }
+    public string Content { get; set; }
 }
 
 public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuery, List<ScheduledPatch>>
@@ -44,13 +39,13 @@ public class GetPatchScheduleQueryHandler : IRequestHandler<GetPatchScheduleQuer
         var response = await _client.GetAsync(_patchScheduleUri, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var json = await JsonSerializer.DeserializeAsync<ZendeskApiResponse>(await response.Content.ReadAsStreamAsync(cancellationToken), new JsonSerializerOptions
+        var json = await JsonSerializer.DeserializeAsync<PatchScheduleApiResponse>(await response.Content.ReadAsStreamAsync(cancellationToken), new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         }, cancellationToken);
 
         var doc = new HtmlDocument();
-        doc.LoadHtml(json.Article.Body);
+        doc.LoadHtml(json.Content);
 
         var tableRows = doc.DocumentNode.SelectNodes("//table/tbody/tr");
 

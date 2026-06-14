@@ -39,7 +39,7 @@ public class ConsoleService : IHostedService
 
             if (args.Length <= 1)
             {
-                _logger.LogCritical("Usage: dotnet run ugg/riot/github/export");
+                _logger.LogCritical("Usage: dotnet run ugg/riot/github/export/patch-schedule");
                 _appLifetime.StopApplication();
                 return;
             }
@@ -106,6 +106,15 @@ public class ConsoleService : IHostedService
                             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                         });
                         Console.WriteLine(json);
+
+                        break;
+                    case "patch-schedule":
+                        var patchSchedule = await _mediator.Send(new GetPatchScheduleQuery(), cancellationToken);
+                        var patchScheduleJson = JsonSerializer.Serialize(patchSchedule, new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        });
+                        Console.WriteLine(patchScheduleJson);
 
                         break;
                     case "run":
