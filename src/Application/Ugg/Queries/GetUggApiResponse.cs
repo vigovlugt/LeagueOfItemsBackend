@@ -23,6 +23,9 @@ public record GetUggApiResponse : IRequest<Stream>
 public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Stream>
 {
     private const int MaxTries = 5;
+    private const string UggOrigin = "https://u.gg";
+    private const string BrowserUserAgent =
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
     private static readonly TimeSpan RequestDelay = TimeSpan.FromMilliseconds(500);
 
     private readonly HttpClient _client;
@@ -35,8 +38,11 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         _client = clientFactory.CreateClient();
         _client.BaseAddress = new Uri(configuration["Ugg:ApiUrl"]);
         _client.Timeout = TimeSpan.FromSeconds(60);
-        _client.DefaultRequestHeaders.UserAgent.ParseAdd("LeagueOfItems/1.0");
+        _client.DefaultRequestHeaders.UserAgent.ParseAdd(BrowserUserAgent);
         _client.DefaultRequestHeaders.Accept.ParseAdd("application/json, text/plain, */*");
+        _client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
+        _client.DefaultRequestHeaders.Add("Origin", UggOrigin);
+        _client.DefaultRequestHeaders.Referrer = new Uri($"{UggOrigin}/");
     }
 
     public async Task<Stream> Handle(GetUggApiResponse request, CancellationToken cancellationToken)
