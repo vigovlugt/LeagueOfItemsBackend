@@ -23,13 +23,16 @@ public record GetUggApiResponse : IRequest<Stream>
 public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Stream>
 {
     private const int MaxTries = 5;
+    private const int DefaultRequestDelayMs = 1250;
+    private const int DefaultForbiddenRetryDelaySeconds = 60;
     private const string UggOrigin = "https://u.gg";
     private const string BrowserUserAgent =
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
-    private static readonly TimeSpan RequestDelay = TimeSpan.FromMilliseconds(500);
 
     private readonly HttpClient _client;
     private readonly ILogger<GetUggApiResponseHandler> _logger;
+    private readonly TimeSpan _requestDelay;
+    private readonly TimeSpan _forbiddenRetryDelay;
 
     public GetUggApiResponseHandler(IHttpClientFactory clientFactory, IConfiguration configuration,
         ILogger<GetUggApiResponseHandler> logger)
@@ -43,6 +46,11 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         _client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
         _client.DefaultRequestHeaders.Add("Origin", UggOrigin);
         _client.DefaultRequestHeaders.Referrer = new Uri($"{UggOrigin}/");
+
+        _requestDelay = TimeSpan.FromMilliseconds(GetConfiguredInt(configuration["Ugg:RequestDelayMs"],
+            DefaultRequestDelayMs));
+        _forbiddenRetryDelay = TimeSpan.FromSeconds(GetConfiguredInt(configuration["Ugg:ForbiddenRetryDelaySeconds"],
+            DefaultForbiddenRetryDelaySeconds));
     }
 
     public async Task<Stream> Handle(GetUggApiResponse request, CancellationToken cancellationToken)
@@ -58,7 +66,7 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
         {
             try
             {
-                await Task.Delay(RequestDelay, cancellationToken);
+                await Task.Delay(_requestDelay, cancellationToken);
                 response = await _client.GetAsync(requestUri, cancellationToken);
 
                 if (response.IsSuccessStatusCode)
@@ -100,7 +108,8 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
 
     private static bool ShouldRetry(HttpStatusCode statusCode)
     {
-        return statusCode == HttpStatusCode.TooManyRequests || (int)statusCode >= 500;
+        return statusCode == HttpStatusCode.Forbidden || statusCode == HttpStatusCode.TooManyRequests ||
+               (int)statusCode >= 500;
     }
 
     private static bool IsTransient(Exception exception)
@@ -109,11 +118,19 @@ public class GetUggApiResponseHandler : IRequestHandler<GetUggApiResponse, Strea
                exception is TaskCanceledException { InnerException: TimeoutException };
     }
 
-    private static TimeSpan GetRetryDelay(HttpResponseMessage response, int tries)
+    private TimeSpan GetRetryDelay(HttpResponseMessage response, int tries)
     {
         return response.Headers.RetryAfter?.Delta ??
-               (response.StatusCode == HttpStatusCode.TooManyRequests
-                   ? TimeSpan.FromSeconds(30)
-                   : TimeSpan.FromSeconds(tries * 2));
+               (response.StatusCode switch
+               {
+                   HttpStatusCode.Forbidden => _forbiddenRetryDelay,
+                   HttpStatusCode.TooManyRequests => TimeSpan.FromSeconds(30),
+                   _ => TimeSpan.FromSeconds(tries * 2)
+               });
+    }
+
+    private static int GetConfiguredInt(string configuredValue, int defaultValue)
+    {
+        return int.TryParse(configuredValue, out var value) && value > 0 ? value : defaultValue;
     }
 }
