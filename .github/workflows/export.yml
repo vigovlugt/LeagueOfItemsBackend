@@ -33,8 +33,8 @@ jobs:
       env:
         "Github:Token": ${{ secrets.TOKEN }}
         
-    - name: Download data from U.GG
-      run: dotnet bin/Release/net8.0/LeagueOfItems.ConsoleApp.dll ugg
+    - name: Download data from Lolalytics
+      run: dotnet bin/Release/net8.0/LeagueOfItems.ConsoleApp.dll lolalytics
       env:
         "Github:Token": ${{ secrets.TOKEN }}
         

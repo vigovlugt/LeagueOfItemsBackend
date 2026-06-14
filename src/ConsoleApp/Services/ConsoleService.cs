@@ -7,6 +7,7 @@ using LeagueOfItems.Application.Champions.Commands;
 using LeagueOfItems.Application.Datasets.Query;
 using LeagueOfItems.Application.Github.Commands;
 using LeagueOfItems.Application.Items.Commands;
+using LeagueOfItems.Application.Lolalytics.Commands;
 using LeagueOfItems.Application.Patches.Queries;
 using LeagueOfItems.Application.Riot.Queries;
 using LeagueOfItems.Application.Runes.Commands;
@@ -39,7 +40,7 @@ public class ConsoleService : IHostedService
 
             if (args.Length <= 1)
             {
-                _logger.LogCritical("Usage: dotnet run ugg/riot/github/export/patch-schedule");
+                _logger.LogCritical("Usage: dotnet run ugg/lolalytics/riot/github/export/patch-schedule");
                 _appLifetime.StopApplication();
                 return;
             }
@@ -92,6 +93,27 @@ public class ConsoleService : IHostedService
                         await _mediator.Send(new GetUggItemDataCommand(previousVersion), cancellationToken);
                         await _mediator.Send(new GetUggRuneDataCommand(previousVersion), cancellationToken);
                         await _mediator.Send(new GetUggBuildPathDataCommand(previousVersion), cancellationToken);
+
+                        break;
+                    case "lolalytics":
+                        await _mediator.Send(new DeleteAllRuneDataCommand());
+                        await _mediator.Send(new DeleteAllItemDataCommand());
+                        await _mediator.Send(new DeleteAllChampionDataCommand());
+                        await _mediator.Send(new DeleteAllBuildPathDataCommand());
+
+                        var lolalyticsVersion = await _mediator.Send(new GetUggVersionQuery(), cancellationToken);
+                        if (string.IsNullOrEmpty(lolalyticsVersion))
+                        {
+                            _logger.LogCritical("Lolalytics version not found");
+                            return;
+                        }
+
+                        await _mediator.Send(new GetLolalyticsDataCommand(lolalyticsVersion), cancellationToken);
+
+                        _logger.LogInformation("Downloading Lolalytics info for previous Patch");
+
+                        var previousLolalyticsVersion = LolVersionHelper.GetPreviousVersion(lolalyticsVersion);
+                        await _mediator.Send(new GetLolalyticsDataCommand(previousLolalyticsVersion), cancellationToken);
 
                         break;
                     case "github":

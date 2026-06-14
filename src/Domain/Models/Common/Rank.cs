@@ -16,5 +16,6 @@ public enum Rank
     Iron = 12,
     Grandmaster = 13,
     MasterPlus = 14,
-    Diamond2Plus = 15
+    Diamond2Plus = 15,
+    EmeraldPlus = 16
 }
