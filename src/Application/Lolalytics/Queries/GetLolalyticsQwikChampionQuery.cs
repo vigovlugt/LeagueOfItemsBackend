@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,6 +41,11 @@ public class GetLolalyticsQwikChampionQueryHandler
         var requestUri = $"lol/{championSlug}/build/?{LolalyticsRequestHelper.ToQueryString(queryParams)}";
 
         using var response = await _client.GetAsync(requestUri, cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
         response.EnsureSuccessStatusCode();
 
         var html = await response.Content.ReadAsStringAsync(cancellationToken);
